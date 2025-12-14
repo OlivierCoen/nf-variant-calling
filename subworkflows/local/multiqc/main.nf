@@ -96,6 +96,13 @@ workflow MULTIQC_WORKFLOW {
             )
         )
 
+
+    ch_multiqc_files = ch_multiqc_files
+                        .mix ( channel.topic("fastqc_zip") )
+                        .mix ( channel.topic("fastp_json") )
+                        .mix ( channel.topic("markdup_log") )
+                        .mix ( channel.topic("flagstat") )
+
     MULTIQC (
         ch_multiqc_files.collect(),
         ch_multiqc_config.toList(),

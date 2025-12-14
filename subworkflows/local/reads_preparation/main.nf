@@ -1,4 +1,4 @@
-include { FASTP                                              } from '../../../modules/nf-core/fastp'
+include { FASTP                                              } from '../../../modules/local/fastp'
 include { FASTQC                                             } from '../../../modules/local/fastqc'
 
 
@@ -8,8 +8,6 @@ workflow READS_PREPARATION {
     ch_reads
 
     main:
-
-    ch_versions = Channel.empty()
 
     // ---------------------------------------------------------------------
     // Quality control on raw reads
@@ -27,13 +25,11 @@ workflow READS_PREPARATION {
 
         FASTP (
             ch_reads,
-            [], false, false, true
+            [], false, false, false
         )
-        ch_reads = FASTP.out.reads
-        ch_versions = ch_versions.mix ( FASTP.out.versions )
+        ch_reads      = FASTP.out.reads
     }
 
     emit:
     reads           = ch_reads
-    versions        = ch_versions
 }

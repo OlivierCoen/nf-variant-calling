@@ -18,6 +18,7 @@ workflow VARIANT_CALLING {
 
     take:
     ch_reads // channel: samplesheet read in from --input
+    ch_genome
 
     main:
 
@@ -35,7 +36,10 @@ workflow VARIANT_CALLING {
     // MAP READS TO REFERENCE GENOME
     // -----------------------------------------------------------------
 
-    MAPPING_MARK_DUPLICATES( ch_reads )
+    MAPPING_MARK_DUPLICATES(
+        ch_reads,
+        ch_genome
+    )
 
     // -----------------------------------------------------------------
     // MARK DUPLICATES

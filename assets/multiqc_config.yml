@@ -12,3 +12,12 @@ report_section_order:
 export_plots: true
 
 disable_version_detection: true
+
+run_modules:
+  - samtools
+  - fastp
+  - fastqc
+
+sp:
+  samtools/markdup_txt:
+    fn: "*.markdup.log"

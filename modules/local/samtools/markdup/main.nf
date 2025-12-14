@@ -11,7 +11,8 @@ process SAMTOOLS_MARKDUP {
     tuple val(meta), path(input_bam)
 
     output:
-    tuple val(meta), path("*.bam"),  emit: bam
+    tuple val(meta), path("*.bam"),     emit: bam
+    path("*.markdup.log"),              topic: markdup_log
     tuple val("${task.process}"), val('samtools'), eval('samtools --version | head -1 | awk "{print $2}"'),    topic: versions
 
 
@@ -25,6 +26,7 @@ process SAMTOOLS_MARKDUP {
     samtools collate ${args} -@ $task.cpus -O -u $input_bam \\
         | samtools fixmate ${args2} -@ $task.cpus -m -u - - \\
         | samtools sort ${args3} -@ $task.cpus -u - \\
-        | samtools markdup ${args4} -@ $task.cpus -T $prefix - ${prefix}.bam
+        | samtools markdup ${args4} -@ $task.cpus -T $prefix -s - ${prefix}.bam \\
+        2> ${prefix}.markdup.log
     """
 }

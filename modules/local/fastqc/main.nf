@@ -13,7 +13,7 @@ process FASTQC {
     output:
     tuple val(meta), path("*.html"),                                                                     emit: html
 
-    path("*.zip"),                                                                                       topic: mqc_fastqc_zip
+    path("*.zip"),                                                                                       topic: fastqc_zip
     tuple val("${task.process}"), val('fastqc'), eval('fastqc --version | sed "/FastQC v/!d; s/.*v//"'), topic: versions
 
     script:

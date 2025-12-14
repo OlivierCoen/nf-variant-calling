@@ -29,6 +29,7 @@ workflow NF_VARIANT_CALLING {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    genome      // channel: genome file read in from --genome
 
     main:
 
@@ -36,7 +37,8 @@ workflow NF_VARIANT_CALLING {
     // WORKFLOW: Run pipeline
     //
     VARIANT_CALLING (
-        samplesheet
+        samplesheet,
+        genome
     )
     emit:
     multiqc_report = VARIANT_CALLING.out.multiqc_report // channel: /path/to/multiqc_report.html
@@ -59,14 +61,16 @@ workflow {
         params.monochrome_logs,
         args,
         params.outdir,
-        params.input
+        params.input,
+        params.genome
     )
 
     //
     // WORKFLOW: Run main workflow
     //
     NF_VARIANT_CALLING (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.genome
     )
     //
     // SUBWORKFLOW: Run completion tasks
