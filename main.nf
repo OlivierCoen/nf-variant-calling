@@ -13,9 +13,9 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { NF-VARIANT-CALLING  } from './workflows/nf-variant-calling'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_nf-variant-calling_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_nf-variant-calling_pipeline'
+include { VARIANT_CALLING  } from './workflows/variant_calling'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_nf_variant_calling_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_nf_variant_calling_pipeline'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -25,7 +25,7 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_nf-v
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow OLIVIERCOEN_NF-VARIANT-CALLING {
+workflow NF_VARIANT_CALLING {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -35,11 +35,11 @@ workflow OLIVIERCOEN_NF-VARIANT-CALLING {
     //
     // WORKFLOW: Run pipeline
     //
-    NF-VARIANT-CALLING (
+    VARIANT_CALLING (
         samplesheet
     )
     emit:
-    multiqc_report = NF-VARIANT-CALLING.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = VARIANT_CALLING.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +65,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    OLIVIERCOEN_NF-VARIANT-CALLING (
+    NF_VARIANT_CALLING (
         PIPELINE_INITIALISATION.out.samplesheet
     )
     //
@@ -77,7 +77,7 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        OLIVIERCOEN_NF-VARIANT-CALLING.out.multiqc_report
+        NF_VARIANT_CALLING.out.multiqc_report
     )
 }
 

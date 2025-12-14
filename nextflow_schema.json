@@ -43,6 +43,29 @@
                 }
             }
         },
+        "read_preparation_options": {
+            "title": "Read preparation options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for reads preparation.",
+            "required": ["input", "outdir"],
+            "properties": {
+                "skip_fastqc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip FastQC quality control step.",
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Use this option to skip FastQC quality control step."
+                },
+                "skip_fastp": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Fastp for trimming and filtering reads.",
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Use this option to skip Fastp."
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -185,6 +208,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/read_preparation_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

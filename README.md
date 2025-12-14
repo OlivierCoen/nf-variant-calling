@@ -1,4 +1,4 @@
-# OlivierCoen/nf-variant-calling
+# nf-variant-calling
 
 [![GitHub Actions CI Status](https://github.com/OlivierCoen/nf-variant-calling/actions/workflows/nf-test.yml/badge.svg)](https://github.com/OlivierCoen/nf-variant-calling/actions/workflows/nf-test.yml)
 [![GitHub Actions Linting Status](https://github.com/OlivierCoen/nf-variant-calling/actions/workflows/linting.yml/badge.svg)](https://github.com/OlivierCoen/nf-variant-calling/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
@@ -13,7 +13,7 @@
 
 ## Introduction
 
-**OlivierCoen/nf-variant-calling** is a bioinformatics pipeline that ...
+**nf-variant-calling** is a simple bioinformatics pipeline that performs variant calling on a custom genome fasta file using Illumina short reads.
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
