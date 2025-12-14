@@ -5,7 +5,7 @@
 */
 
 include { READS_PREPARATION                      } from '../subworkflows/local/reads_preparation'
-include { MAPPING                                } from '../subworkflows/local/mapping'
+include { MAPPING_MARK_DUPLICATES                } from '../subworkflows/local/mapping_mark_duplicates'
 include { MULTIQC_WORKFLOW                       } from '../subworkflows/local/multiqc'
 
 /*
@@ -14,7 +14,7 @@ include { MULTIQC_WORKFLOW                       } from '../subworkflows/local/m
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow NF_VARIANT_CALLING {
+workflow VARIANT_CALLING {
 
     take:
     ch_reads // channel: samplesheet read in from --input
@@ -35,7 +35,7 @@ workflow NF_VARIANT_CALLING {
     // MAP READS TO REFERENCE GENOME
     // -----------------------------------------------------------------
 
-    MAPPING( ch_reads )
+    MAPPING_MARK_DUPLICATES( ch_reads )
 
     // -----------------------------------------------------------------
     // MARK DUPLICATES
