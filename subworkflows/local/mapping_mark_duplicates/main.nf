@@ -39,9 +39,10 @@ workflow MAPPING_MARK_DUPLICATES {
     // -----------------------------------------------------------------
 
     SAMTOOLS_INDEX ( ch_bam )
+    ch_bai = SAMTOOLS_INDEX.out.bai
 
     SAMTOOLS_FLAGSTAT(
-        ch_bam.join ( SAMTOOLS_INDEX.out.bai )
+        ch_bam.join ( ch_bai )
     )
 
 
@@ -52,5 +53,6 @@ workflow MAPPING_MARK_DUPLICATES {
 
     emit:
     bam                     = ch_bam
+    bai                     = ch_bai
     versions                = ch_versions
 }

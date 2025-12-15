@@ -6,6 +6,7 @@
 
 include { READS_PREPARATION                      } from '../subworkflows/local/reads_preparation'
 include { MAPPING_MARK_DUPLICATES                } from '../subworkflows/local/mapping_mark_duplicates'
+include { SNP_INDEL_SV_CALLING                   } from '../subworkflows/local/snp_indel_sv_calling'
 include { MULTIQC_WORKFLOW                       } from '../subworkflows/local/multiqc'
 
 /*
@@ -42,14 +43,22 @@ workflow VARIANT_CALLING {
     )
 
     // -----------------------------------------------------------------
-    // MARK DUPLICATES
+    // VARIANT CALLING
     // -----------------------------------------------------------------
 
+    SNP_INDEL_SV_CALLING(
+        MAPPING_MARK_DUPLICATES.out.bam,
+        MAPPING_MARK_DUPLICATES.out.bai,
+        ch_genome
+    )
 
 
     // -----------------------------------------------------------------
     // MULTIQC
     // -----------------------------------------------------------------
+
+    ch_versions = ch_versions
+                    .mix ( MAPPING_MARK_DUPLICATES.out.versions )
 
     MULTIQC_WORKFLOW(
         ch_multiqc_files,

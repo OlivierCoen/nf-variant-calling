@@ -22,7 +22,7 @@ process FASTP {
     tuple val(meta), path('*.merged.fastq.gz'), optional:true, emit: reads_merged
 
     path('*.json'),                                                                                     topic: fastp_json
-    tuple val("${task.process}"), val('faqtp'), eval('fastp --version 2>&1 | sed -e "s/fastp //g"'),    topic: versions
+    tuple val("${task.process}"), val('fastp'), eval('fastp --version 2>&1 | sed -e "s/fastp //g"'),    topic: versions
 
     script:
     def args = task.ext.args ?: ''
