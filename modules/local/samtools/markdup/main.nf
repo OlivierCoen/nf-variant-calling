@@ -1,5 +1,5 @@
 process SAMTOOLS_MARKDUP {
-    tag "$meta.id"
+    tag "${meta.id} - ${meta.lane}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -23,10 +23,10 @@ process SAMTOOLS_MARKDUP {
     def args4 = task.ext.args4 ?: ''
     def prefix = "${input_bam.baseName}.markdup"
     """
-    samtools collate ${args} -@ $task.cpus -O -u $input_bam \\
-        | samtools fixmate ${args2} -@ $task.cpus -m -u - - \\
-        | samtools sort ${args3} -@ $task.cpus -u - \\
-        | samtools markdup ${args4} -@ $task.cpus -T $prefix -s - ${prefix}.bam \\
+    samtools collate ${args} -@ ${task.cpus-1} -O -u $input_bam \\
+        | samtools fixmate ${args2} -@ ${task.cpus-1} -m -u - - \\
+        | samtools sort ${args3} -@ ${task.cpus-1} -u - \\
+        | samtools markdup ${args4} -@ ${task.cpus-1} -T $prefix -s - ${prefix}.bam \\
         2> ${prefix}.markdup.log
     """
 }

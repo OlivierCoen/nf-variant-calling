@@ -1,5 +1,5 @@
 process BWAMEM2_MEM {
-    tag "$meta.id"
+    tag "${meta.id} - ${meta.lane}"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
@@ -21,7 +21,7 @@ process BWAMEM2_MEM {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def args3 = task.ext.args3 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${meta.lane}"
 
     """
     INDEX=`find -L ./ -name "*.amb" | sed 's/\\.amb\$//'`

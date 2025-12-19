@@ -75,6 +75,39 @@
                 }
             }
         },
+        "mapping_mark_dups_options": {
+            "title": "Mapping and Mark Duplicates options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for mapping and marking duplicates.",
+            "required": ["input", "outdir"],
+            "properties": {
+                "markdup_method": {
+                    "type": "string",
+                    "enum": ["gatk", "samtools"],
+                    "default": "gatk",
+                    "description": "Method to use for marking duplicates.",
+                    "fa_icon": "fas fa-terminal",
+                    "help_text": "Method to use for marking duplicates."
+                }
+            }
+        },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for variant calling.",
+            "required": ["input", "outdir"],
+            "properties": {
+                "reference_chunksize": {
+                    "type": "integer",
+                    "default": 1e6,
+                    "description": "Maximum length of reference FASTA file to use with FreeBayes.",
+                    "fa_icon": "fas fa-terminal",
+                    "help_text": "Maximum length of reference FASTA file to use with FreeBayes."
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -220,6 +253,12 @@
         },
         {
             "$ref": "#/$defs/read_preparation_options"
+        },
+        {
+            "$ref": "#/$defs/mapping_mark_dups_options"
+        },
+        {
+            "$ref": "#/$defs/variant_calling_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

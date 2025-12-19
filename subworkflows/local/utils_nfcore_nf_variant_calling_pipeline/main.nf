@@ -76,6 +76,8 @@ workflow PIPELINE_INITIALISATION {
                 }
         }
 
+    validateInputSamplesheet(ch_samplesheet)
+
     ch_genome = Channel.fromPath( params.genome, checkIfExists: true ).map{ file -> [ [id: file.baseName ], file ] }
 
     emit:
@@ -136,7 +138,17 @@ workflow PIPELINE_COMPLETION {
 //
 // Validate channels from input samplesheet
 //
-// def validateInputSamplesheet(input){}
+def validateInputSamplesheet(ch_input){
+    ch_input
+        .map { meta, file -> [ "${meta.id}_${meta.lane}", meta, file ] }
+        .groupTuple()
+        .map { id, meta, files ->
+            if (files.size() > 1) {
+                error("Multiple files found for sample ${meta[0].id} and lane ${meta[0].lane}. Each line of the samplesheet must contain unique combinations of samples and lanes.")
+            }
+        }
+}
+
 //
 // Generate methods description for MultiQC
 //

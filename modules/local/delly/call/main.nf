@@ -1,6 +1,7 @@
 process DELLY_CALL {
-    tag "$meta.id"
-    label 'process_medium'
+
+    tag "${meta.id} on ${region.chrom}:${region.start}-${region.end}"
+    label 'process_single'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,6 +11,7 @@ process DELLY_CALL {
     input:
     tuple val(meta), path(bam), path(bai)
     tuple val(meta2), path(fasta), path(fai)
+    tuple path(all_regions_file), val(region)
 
     output:
     tuple val(meta), path("*.vcf.gz")  , emit: vcf
@@ -22,6 +24,9 @@ process DELLY_CALL {
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    # making file for regions to exclude
+    egrep -v "^${region.chrom}\s+${region.start}\s+${region.end}\$" ${all_regions_file} > ${prefix}.regions.bed
+
     delly \\
         call \\
         ${args} \\
