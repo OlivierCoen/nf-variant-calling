@@ -9,9 +9,9 @@ process DELLY_CALL {
         'biocontainers/delly:1.3.3--h4d20210_0' }"
 
     input:
-    tuple val(meta), path(bam), path(bai)
+    tuple val(meta), path(bam), path(bai), val(region)
     tuple val(meta2), path(fasta), path(fai)
-    tuple path(all_regions_file), val(region)
+    path(all_regions_file)
 
     output:
     tuple val(meta), path("*.vcf.gz")  , emit: vcf

@@ -19,32 +19,31 @@ workflow SNP_INDEL_SV_CALLING {
                     .splitCsv(sep: "\t")
                     .map { row -> [chrom: row[0], start: row[1], end: row[2]] }
 
+    ch_bam_bai_regions = ch_bam
+                            .join( ch_bai )
+                            .combine( ch_regions )
 
     // -----------------------------------------------------------------
     // SNPS AND INDELS
     // -----------------------------------------------------------------
 
     FREEBAYES (
-        ch_bam.join( ch_bai ),
-        ch_genome.join( ch_genome_fai ).collect(),
-        ch_regions
+        ch_bam_bai_regions,
+        ch_genome.join( ch_genome_fai ).collect()
     )
-    ch_snp_indel_vcf = FREEBAYES.out.vcf
-
 
     // -----------------------------------------------------------------
     // SVs
     // -----------------------------------------------------------------
 
     DELLY_CALL(
-        ch_bam.join( ch_bai ),
+        ch_bam_bai_regions,
         ch_genome.join( ch_genome_fai ).collect(),
-        ch_genome_region_file.combine( ch_regions )
+        ch_genome_region_file.collect()
     )
-    ch_sv_vcf = DELLY_CALL.out.vcf
 
 
     emit:
-    snp_indel_per_region                 = ch_snp_indel_vcf
-    sv_per_region                        = ch_sv_vcf
+    snp_indel_per_region                 = FREEBAYES.out.vcf
+    sv_per_region                        = DELLY_CALL.out.vcf
 }

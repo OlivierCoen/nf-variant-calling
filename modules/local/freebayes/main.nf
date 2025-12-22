@@ -1,6 +1,6 @@
 process FREEBAYES {
 
-    tag "${meta.id} on ${chrom}:${start}-${end}"
+    tag "${meta.id} on ${region.chrom}:${region.start}-${region.end}"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
@@ -9,9 +9,8 @@ process FREEBAYES {
         : 'biocontainers/freebayes:1.3.10--hbefcdb2_0'}"
 
     input:
-    tuple val(meta), path(bam), path(bai)
-    tuple val(meta), path(fasta), path(fai)
-    tuple val(chrom), val(start), val(end)
+    tuple val(meta), path(bam), path(bai), val(region)
+    tuple val(meta2), path(fasta), path(fai)
 
     output:
     path("*.vcf.gz"), emit: vcf
@@ -20,14 +19,14 @@ process FREEBAYES {
 
     script:
     def args    = task.ext.args   ?: ''
-    def prefix  = task.ext.prefix ?: "${chrom}_${start}_${end}"
+    def prefix  = task.ext.prefix ?: "${region.chrom}_${region.start}_${region.end}"
     """
     freebayes \\
         --fasta-reference ${fasta} \\
         --gvcf \\
         ${args} \\
         --bam ${bam} \\
-        --region ${chrom}:${start}-${end} \\
+        --region ${region.chrom}:${region.start}-${region.end} \\
         --vcf ${prefix}.vcf
 
     bgzip ${prefix}.vcf

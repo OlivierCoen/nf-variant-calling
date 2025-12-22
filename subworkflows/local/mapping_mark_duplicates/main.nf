@@ -38,8 +38,8 @@ workflow MAPPING_MARK_DUPLICATES {
 
     GATK4_ADDORREPLACEREADGROUPS (
         BWAMEM2_MEM.out.bam,
-        ch_genome,
-        ch_genome_fai
+        ch_genome.collect(),
+        ch_genome_fai.collect()
     )
 
     // -----------------------------------------------------------------
@@ -61,9 +61,9 @@ workflow MAPPING_MARK_DUPLICATES {
 
         GATK4SPARK_MARKDUPLICATES (
             ch_bam,
-            ch_genome.map { meta, file -> file },
-            ch_genome_fai.map { meta, file -> file },
-            ch_genome_dict.map { meta, file -> file },
+            ch_genome.map { meta, file -> file }.collect(),
+            ch_genome_fai.map { meta, file -> file }.collect(),
+            ch_genome_dict.map { meta, file -> file }.collect(),
         )
         ch_markdupped_bam = GATK4SPARK_MARKDUPLICATES.out.output
         ch_versions = ch_versions.mix(GATK4SPARK_MARKDUPLICATES.out.versions)
