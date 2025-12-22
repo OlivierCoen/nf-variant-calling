@@ -22,7 +22,7 @@ process DELLY_CALL {
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${region.chrom}_${region.start}_${region.end}"
     """
     # making file for regions to exclude
     egrep -v "^${region.chrom}\s+${region.start}\s+${region.end}\$" ${all_regions_file} > ${prefix}.regions.bed

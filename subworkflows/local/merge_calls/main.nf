@@ -32,7 +32,7 @@ workflow MERGE_CALLS {
                     .map { meta, vcfs -> [ meta, vcfs, [] ] }
 
     BCFTOOLS_CONCAT ( ch_to_concat )
-
+/*
     // -----------------------------------------------------------------
     // MERGE HORIZONTALLY ON SAMPLES
     // -----------------------------------------------------------------
@@ -60,4 +60,5 @@ workflow MERGE_CALLS {
     emit:
     vcf = BCFTOOLS_MERGE.out.vcf
     versions = ch_versions
+*/
 }

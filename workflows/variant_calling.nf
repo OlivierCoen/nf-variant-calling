@@ -73,13 +73,14 @@ workflow VARIANT_CALLING {
     // -----------------------------------------------------------------
     // MERGE
     // -----------------------------------------------------------------
-/*
+
+
     MERGE_SNPS_INDELS (
         SNP_INDEL_SV_CALLING.out.snp_indel_per_region,
         ch_genome,
         ch_genome_fai
      )
-
+/*
     MERGE_SVS (
         SNP_INDEL_SV_CALLING.out.sv_per_region,
         ch_genome,

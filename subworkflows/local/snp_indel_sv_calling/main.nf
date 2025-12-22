@@ -42,7 +42,6 @@ workflow SNP_INDEL_SV_CALLING {
         ch_genome_region_file.collect()
     )
 
-
     emit:
     snp_indel_per_region                 = FREEBAYES.out.vcf
     sv_per_region                        = DELLY_CALL.out.vcf
