@@ -73,7 +73,7 @@ workflow VARIANT_CALLING {
     // -----------------------------------------------------------------
     // MERGE
     // -----------------------------------------------------------------
-
+/*
     MERGE_SNPS_INDELS (
         SNP_INDEL_SV_CALLING.out.snp_indel_per_region,
         ch_genome,
@@ -85,7 +85,7 @@ workflow VARIANT_CALLING {
         ch_genome,
         ch_genome_fai
      )
-
+*/
     // -----------------------------------------------------------------
     // STATS
     // -----------------------------------------------------------------
@@ -98,7 +98,7 @@ workflow VARIANT_CALLING {
     ch_versions = ch_versions
                     .mix ( GENOME_PREPARATION.out.versions )
                     .mix ( MAPPING_MARK_DUPLICATES.out.versions )
-                    .mix ( MERGE_SNPS_INDELS.out.versions )
+                    //.mix ( MERGE_SNPS_INDELS.out.versions )
 
 
     MULTIQC_WORKFLOW(

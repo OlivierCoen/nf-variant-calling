@@ -3,6 +3,7 @@ include { BWAMEM2_MEM                                               } from '../.
 include { SAMTOOLS_MARKDUP                                          } from '../../../modules/local/samtools/markdup'
 include { GATK4SPARK_MARKDUPLICATES                                 } from '../../../modules/nf-core/gatk4spark/markduplicates'
 include { SAMTOOLS_MERGE                                            } from '../../../modules/local/samtools/merge'
+include { GATK4_ADDORREPLACEREADGROUPS                              } from '../../../modules/local/gatk4/addorreplacereadgroups'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index'
 include { SAMTOOLS_FLAGSTAT                                         } from '../../../modules/local/samtools/flagstat'
 
@@ -32,13 +33,34 @@ workflow MAPPING_MARK_DUPLICATES {
     )
 
     // -----------------------------------------------------------------
+    // ADD READ GROUP IN HEADER
+    // -----------------------------------------------------------------
+
+    GATK4_ADDORREPLACEREADGROUPS (
+        BWAMEM2_MEM.out.bam,
+        ch_genome,
+        ch_genome_fai
+    )
+
+    // -----------------------------------------------------------------
+    // MERGE BY SAMPLE
+    // -----------------------------------------------------------------
+
+    ch_grouped_bams = GATK4_ADDORREPLACEREADGROUPS.out.bam
+                        .map { meta, file -> [ [id: meta.id], file ] } // removing lane info
+                        .groupTuple()
+
+    SAMTOOLS_MERGE ( ch_grouped_bams )
+    ch_bam = SAMTOOLS_MERGE.out.bam
+
+    // -----------------------------------------------------------------
     // MARK DUPLICATES
     // -----------------------------------------------------------------
 
     if ( params.markdup_method == "gatk" ) {
 
         GATK4SPARK_MARKDUPLICATES (
-            BWAMEM2_MEM.out.bam,
+            ch_bam,
             ch_genome.map { meta, file -> file },
             ch_genome_fai.map { meta, file -> file },
             ch_genome_dict.map { meta, file -> file },
@@ -48,24 +70,12 @@ workflow MAPPING_MARK_DUPLICATES {
 
     } else {
 
-        SAMTOOLS_MARKDUP ( BWAMEM2_MEM.out.bam )
+        SAMTOOLS_MARKDUP ( ch_bam )
         ch_markdupped_bam = SAMTOOLS_MARKDUP.out.bam
 
     }
 
-    // -----------------------------------------------------------------
-    // MERGE BY SAMPLE
-    // -----------------------------------------------------------------
-
-    ch_grouped_bams = ch_markdupped_bam
-                        .map { meta, file -> [ [id: meta.id], file ] } // removing lane info
-                        .groupTuple()
-
-    SAMTOOLS_MERGE ( ch_grouped_bams )
-    ch_bam = SAMTOOLS_MERGE.out.bam
-
-    SAMTOOLS_INDEX ( ch_bam )
-
+    SAMTOOLS_INDEX ( ch_markdupped_bam )
 
 
     ch_versions = ch_versions
@@ -74,7 +84,7 @@ workflow MAPPING_MARK_DUPLICATES {
 
 
     emit:
-    bam                     = ch_bam
+    bam                     = ch_markdupped_bam
     bai                     = SAMTOOLS_INDEX.out.bai
     versions                = ch_versions
 }
