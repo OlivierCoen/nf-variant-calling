@@ -8,11 +8,11 @@ process GATK4_VARIANTEVAL {
         : 'community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3'}"
 
     input:
-    tuple val(meta), path(vcf)
-    tuple val(meta2), path(fasta), path(fai)
+    tuple val(meta), path(vcf), path(csi)
+    tuple val(meta2), path(fasta), path(fai), path(dict)
 
     output:
-    path('output.eval.grp'), emit: output
+    path('output.eval.grp'), topic: gatk_variant_eval
     tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | sed 's/^.*(GATK) v//; s/ .*\$//'"), topic: versions
 
 
@@ -29,9 +29,9 @@ process GATK4_VARIANTEVAL {
     """
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
         VariantEval \\
-        --REFERENCE ${fasta} \\
-        --OUTPUT ${prefix}.eval.grp \\
-        --eval set:${vcf} \\
+        --reference ${fasta} \\
+        --output ${prefix}.eval.grp \\
+        --eval ${vcf} \\
         ${args}
     """
 }

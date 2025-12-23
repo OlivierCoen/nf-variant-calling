@@ -9,8 +9,7 @@ process GATK4_ADDORREPLACEREADGROUPS {
 
     input:
     tuple val(meta), path(bam)
-    tuple val(meta2), path(fasta)
-    tuple val(meta3), path(fasta_index)
+    tuple val(meta2), path(fasta), path(fai)
 
     output:
     tuple val(meta), path("*.bam"),  emit: bam,  optional: true

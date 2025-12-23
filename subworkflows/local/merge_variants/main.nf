@@ -10,7 +10,6 @@ workflow MERGE_VARIANTS {
 
     take:
     ch_variants_per_region
-    ch_genome
     ch_genome_fai
 
     main:
@@ -45,13 +44,12 @@ workflow MERGE_VARIANTS {
     BCFTOOLS_MERGE (
         BCFTOOLS_SORT_ALL.out.bcf.map { meta, file -> file }.collect(),
         BCFTOOLS_SORT_ALL.out.csi.map { meta, file -> file }.collect(),
-        ch_genome.collect(),
         ch_genome_fai.collect()
     )
 
+    ch_vcf_tbi = BCFTOOLS_MERGE.out.vcf.join( BCFTOOLS_MERGE.out.tbi )
 
     emit:
-    vcf             = BCFTOOLS_MERGE.out.vcf
-    index           = BCFTOOLS_MERGE.out.index
+    variants             = ch_vcf_tbi
 
 }

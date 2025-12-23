@@ -9,18 +9,13 @@ process GATK4SPARK_MARKDUPLICATES {
 
     input:
     tuple val(meta), path(bam)
-    path fasta
-    path fasta_fai
-    path dict
+    tuple val(meta2), path(fasta), path(fai), path(dict)
 
     output:
     tuple val(meta), path("${prefix}"),     emit: output
     tuple val(meta), path("${prefix}.bai"), emit: bam_index, optional: true
     tuple val(meta), path("*.metrics"),     emit: metrics,   optional: true
-    path "versions.yml",                    emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | sed 's/^.*(GATK) v//; s/ .*\$//'"), topic: versions
 
     script:
     def args = task.ext.args ?: ''
@@ -44,22 +39,5 @@ process GATK4SPARK_MARKDUPLICATES {
         --tmp-dir . \\
         ${args}
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
-    """
-
-    stub:
-    prefix = task.ext.prefix ?: "${meta.id}.bam"
-    """
-    touch ${prefix}
-    touch ${prefix}.bai
-    touch ${prefix}.metrics
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
     """
 }

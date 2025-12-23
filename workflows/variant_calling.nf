@@ -7,11 +7,9 @@
 include { GENOME_PREPARATION                                    } from '../subworkflows/local/genome_preparation'
 include { READS_PREPARATION                                     } from '../subworkflows/local/reads_preparation'
 include { MAPPING_MARK_DUPLICATES                               } from '../subworkflows/local/mapping_mark_duplicates'
+include { GET_VARIANTS as SNPS_INDELS                           } from '../subworkflows/local/get_variants'
+include { GET_VARIANTS as STRUCTURAL_VARIANTS                   } from '../subworkflows/local/get_variants'
 
-include { SNPS_INDELS                                           } from '../subworkflows/local/snps_indels'
-include { STRUCTURAL_VARIANTS                                   } from '../subworkflows/local/structural_variants'
-
-include { GENERATE_STATS                                        } from '../subworkflows/local/generate_stats'
 include { MULTIQC_WORKFLOW                                      } from '../subworkflows/local/multiqc'
 
 /*
@@ -36,9 +34,12 @@ workflow VARIANT_CALLING {
         ch_genome,
         params.reference_chunksize
     )
-    ch_genome_fai         = GENOME_PREPARATION.out.fai
+
+    ch_genome_fai_dict = ch_genome
+                            .join( GENOME_PREPARATION.out.fai )
+                            .join( GENOME_PREPARATION.out.dict )
+
     ch_genome_region_file = GENOME_PREPARATION.out.region_file
-    ch_genome_dict        = GENOME_PREPARATION.out.dict
 
     // -----------------------------------------------------------------
     // PREPARE READS
@@ -53,38 +54,27 @@ workflow VARIANT_CALLING {
 
     MAPPING_MARK_DUPLICATES(
         ch_reads,
-        ch_genome,
-        ch_genome_fai,
-        ch_genome_dict
+        ch_genome_fai_dict
     )
-    ch_bam = MAPPING_MARK_DUPLICATES.out.bam
-    ch_bai = MAPPING_MARK_DUPLICATES.out.bai
+    ch_bam_bai = MAPPING_MARK_DUPLICATES.out.bam_bai
 
     // -----------------------------------------------------------------
-    // VARIANT CALLING
+    // VARIANT CALLING / MERGING / STATS
     // -----------------------------------------------------------------
 
     SNPS_INDELS(
-        ch_bam,
-        ch_bai,
-        ch_genome,
-        ch_genome_fai,
+        ch_bam_bai,
+        ch_genome_fai_dict,
         ch_genome_region_file,
-        ch_genome_dict
+        "snps_indels"
     )
 
     STRUCTURAL_VARIANTS(
-        ch_bam,
-        ch_bai,
-        ch_genome,
-        ch_genome_fai,
-        ch_genome_region_file
+        ch_bam_bai,
+        ch_genome_fai_dict,
+        ch_genome_region_file,
+        "svs"
     )
-
-    // -----------------------------------------------------------------
-    // STATS
-    // -----------------------------------------------------------------
-
 
     // -----------------------------------------------------------------
     // MULTIQC
@@ -93,8 +83,6 @@ workflow VARIANT_CALLING {
     ch_versions = ch_versions
                     .mix ( GENOME_PREPARATION.out.versions )
                     .mix ( MAPPING_MARK_DUPLICATES.out.versions )
-                    .mix ( SNPS_INDELS.out.versions )
-                    .mix ( STRUCTURAL_VARIANTS.out.versions )
 
     MULTIQC_WORKFLOW(
         ch_multiqc_files,

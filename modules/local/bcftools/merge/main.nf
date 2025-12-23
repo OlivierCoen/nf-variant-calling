@@ -10,12 +10,11 @@ process BCFTOOLS_MERGE {
     input:
     path(vcfs)
     path(tbis)
-    tuple val(meta), path(fasta)
-    tuple val(meta2), path(fai)
+    tuple val(meta), path(fasta), path(fai)
 
     output:
-    tuple val(meta), path("*.{bcf,vcf}{,.gz}"), emit: vcf
-    tuple val(meta), path("*.{csi,tbi}")      , emit: index, optional: true
+    tuple val(meta), path("*.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.tbi")   , emit: tbi
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), topic: versions
 
     script:
@@ -27,10 +26,11 @@ process BCFTOOLS_MERGE {
     bcftools merge \\
         $args \\
         --gvcf ${fasta} \\
+        --output-type z \\
         --threads $task.cpus \\
         --output ${prefix}.vcf.gz \\
         --merge none \\
-        --write-index=csi \\
+        --write-index=tbi \\
         $input
     """
 }
