@@ -4,9 +4,9 @@ process DELLY_CALL {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/delly:1.3.3--h4d20210_0' :
-        'biocontainers/delly:1.3.3--h4d20210_0' }"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d8/d871bbc11d83f49db1090b0613d4dc2244821864e280f092d4bc5c5121a8db1c/data' :
+        'community.wave.seqera.io/library/delly:1.7.2--a8cf3dbcfe03c0dd' }"
 
     input:
     tuple val(meta), path(bam), path(bai), val(region)
@@ -29,6 +29,7 @@ process DELLY_CALL {
 
     delly \\
         call \\
+        --threads ${task.cpus} \\
         ${args} \\
         --genome ${fasta} \\
         ${bam} \\

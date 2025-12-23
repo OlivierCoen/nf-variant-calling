@@ -7,9 +7,10 @@
 include { GENOME_PREPARATION                                    } from '../subworkflows/local/genome_preparation'
 include { READS_PREPARATION                                     } from '../subworkflows/local/reads_preparation'
 include { MAPPING_MARK_DUPLICATES                               } from '../subworkflows/local/mapping_mark_duplicates'
-include { SNP_INDEL_SV_CALLING                                  } from '../subworkflows/local/snp_indel_sv_calling'
-include { MERGE_CALLS as MERGE_SNPS_INDELS                      } from '../subworkflows/local/merge_calls'
-include { MERGE_CALLS as MERGE_SVS                              } from '../subworkflows/local/merge_calls'
+
+include { SNPS_INDELS                                           } from '../subworkflows/local/snps_indels'
+include { STRUCTURAL_VARIANTS                                   } from '../subworkflows/local/structural_variants'
+
 include { GENERATE_STATS                                        } from '../subworkflows/local/generate_stats'
 include { MULTIQC_WORKFLOW                                      } from '../subworkflows/local/multiqc'
 
@@ -56,37 +57,30 @@ workflow VARIANT_CALLING {
         ch_genome_fai,
         ch_genome_dict
     )
+    ch_bam = MAPPING_MARK_DUPLICATES.out.bam
+    ch_bai = MAPPING_MARK_DUPLICATES.out.bai
 
     // -----------------------------------------------------------------
     // VARIANT CALLING
     // -----------------------------------------------------------------
 
-    SNP_INDEL_SV_CALLING(
-        MAPPING_MARK_DUPLICATES.out.bam,
-        MAPPING_MARK_DUPLICATES.out.bai,
+    SNPS_INDELS(
+        ch_bam,
+        ch_bai,
         ch_genome,
         ch_genome_fai,
         ch_genome_region_file,
         ch_genome_dict
     )
 
-    // -----------------------------------------------------------------
-    // MERGE
-    // -----------------------------------------------------------------
-
-
-    MERGE_SNPS_INDELS (
-        SNP_INDEL_SV_CALLING.out.snp_indel_per_region,
+    STRUCTURAL_VARIANTS(
+        ch_bam,
+        ch_bai,
         ch_genome,
-        ch_genome_fai
-     )
-/*
-    MERGE_SVS (
-        SNP_INDEL_SV_CALLING.out.sv_per_region,
-        ch_genome,
-        ch_genome_fai
-     )
-*/
+        ch_genome_fai,
+        ch_genome_region_file
+    )
+
     // -----------------------------------------------------------------
     // STATS
     // -----------------------------------------------------------------
@@ -99,8 +93,8 @@ workflow VARIANT_CALLING {
     ch_versions = ch_versions
                     .mix ( GENOME_PREPARATION.out.versions )
                     .mix ( MAPPING_MARK_DUPLICATES.out.versions )
-                    //.mix ( MERGE_SNPS_INDELS.out.versions )
-
+                    .mix ( SNPS_INDELS.out.versions )
+                    .mix ( STRUCTURAL_VARIANTS.out.versions )
 
     MULTIQC_WORKFLOW(
         ch_multiqc_files,
