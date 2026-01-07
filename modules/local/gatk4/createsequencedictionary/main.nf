@@ -3,7 +3,7 @@ process GATK4_CREATESEQUENCEDICTIONARY {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0/data'
         : 'community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3'}"
 
@@ -12,10 +12,7 @@ process GATK4_CREATESEQUENCEDICTIONARY {
 
     output:
     tuple val(meta), path('*.dict'), emit: dict
-    path "versions.yml",             emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | grep 'The Genome Analysis Toolkit' | cut -d' ' -f6"), topic: versions
 
     script:
     def args = task.ext.args ?: ''
@@ -34,20 +31,5 @@ process GATK4_CREATESEQUENCEDICTIONARY {
         --URI ${fasta} \\
         --TMP_DIR . \\
         ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
-    """
-
-    stub:
-    """
-    touch ${fasta.baseName}.dict
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
     """
 }

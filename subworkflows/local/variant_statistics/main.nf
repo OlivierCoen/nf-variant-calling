@@ -1,4 +1,4 @@
-include { GATK4_VARIANTEVAL                                         } from '../../../modules/local/gatk4/varianteval'
+//include { GATK4_VARIANTEVAL                                         } from '../../../modules/local/gatk4/varianteval'
 include { BCFTOOLS_STATS                                            } from '../../../modules/local/bcftools/stats'
 
 
@@ -21,10 +21,12 @@ workflow VARIANT_STATISTICS {
         ch_variants,
         ch_genome_fai_dict.map { meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect()
     )
-    ch_variants.view()
+
+    /*
     GATK4_VARIANTEVAL(
         ch_variants,
         ch_genome_fai_dict.collect()
     )
+    */
 
 }

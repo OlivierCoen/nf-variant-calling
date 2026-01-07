@@ -1,6 +1,6 @@
 include { SAMTOOLS_FAIDX                                        } from '../../../modules/local/samtools/faidx'
 include { MAKE_GENOME_REGIONS                                   } from '../../../modules/local/make_genome_regions'
-include { GATK4_CREATESEQUENCEDICTIONARY                        } from '../../../modules/nf-core/gatk4/createsequencedictionary'
+include { GATK4_CREATESEQUENCEDICTIONARY                        } from '../../../modules/local/gatk4/createsequencedictionary'
 
 workflow GENOME_PREPARATION {
 
@@ -33,10 +33,6 @@ workflow GENOME_PREPARATION {
 
     GATK4_CREATESEQUENCEDICTIONARY ( ch_genome )
 
-
-
-    ch_versions = ch_versions
-                    .mix ( GATK4_CREATESEQUENCEDICTIONARY.out.versions )
 
 
     emit:

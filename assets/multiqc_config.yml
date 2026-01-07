@@ -14,9 +14,13 @@ export_plots: true
 disable_version_detection: true
 
 run_modules:
+  - bcftools
   - samtools
   - fastp
   - fastqc
+
+bcftools:
+  collapse_complementary_changes: true
 
 sp:
   samtools/markdup_txt:

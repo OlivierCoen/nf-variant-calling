@@ -11,8 +11,8 @@ process SAMTOOLS_FLAGSTAT {
     tuple val(meta), path(bam), path(bai)
 
     output:
-    path("*.flagstat"), topic: flagstat
-    tuple val("${task.process}"), val('samtools'), eval('samtools --version | head -1 | awk "{print $2}"'),    topic: versions
+    path("*.flagstat"),                                                                                     topic: flagstat
+    tuple val("${task.process}"), val('samtools'), eval('samtools --version | head -1 | awk "{print $2}"'), topic: versions
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

@@ -3,7 +3,7 @@ process GATK4SPARK_MARKDUPLICATES {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/49/498aea9c9bcaf736b9fb2a01366c1b7b38ccc0d38143178afc325d6a93241447/data'
         : 'community.wave.seqera.io/library/gatk4-spark:4.6.2.0--8b5cd67ee60a714e'}"
 
@@ -15,7 +15,7 @@ process GATK4SPARK_MARKDUPLICATES {
     tuple val(meta), path("${prefix}"),     emit: output
     tuple val(meta), path("${prefix}.bai"), emit: bam_index, optional: true
     tuple val(meta), path("*.metrics"),     emit: metrics,   optional: true
-    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | sed 's/^.*(GATK) v//; s/ .*\$//'"), topic: versions
+    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | grep 'The Genome Analysis Toolkit' | cut -d' ' -f6"), topic: versions
 
     script:
     def args = task.ext.args ?: ''

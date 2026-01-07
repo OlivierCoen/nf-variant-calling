@@ -23,6 +23,7 @@ workflow MULTIQC_WORKFLOW {
 
     main:
 
+
     // ------------------------------------------------------------------------------------
     // VERSIONS
     // ------------------------------------------------------------------------------------
@@ -96,12 +97,12 @@ workflow MULTIQC_WORKFLOW {
             )
         )
 
-
     ch_multiqc_files = ch_multiqc_files
                         .mix ( channel.topic("fastqc_zip") )
                         .mix ( channel.topic("fastp_json") )
                         .mix ( channel.topic("markdup_log") )
                         .mix ( channel.topic("flagstat") )
+                        .mix ( channel.topic('bcftools_stats') )
 
     MULTIQC (
         ch_multiqc_files.collect(),

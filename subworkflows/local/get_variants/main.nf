@@ -1,6 +1,7 @@
 include { CALL_VARIANTS                                 } from '../call_variants'
 include { MERGE_VARIANTS                                } from '../merge_variants'
-include { VARIANT_STATISTICS as STATISTICS            } from '../variant_statistics'
+include { FILTER_VARIANTS                               } from '../filter_variants'
+include { VARIANT_STATISTICS as STATISTICS              } from '../variant_statistics'
 
 
 
@@ -30,22 +31,33 @@ workflow GET_VARIANTS {
     // -----------------------------------------------------------------
 
     MERGE_VARIANTS (
-        CALL_VARIANTS.out.vcf,
-        ch_genome_fai_dict.map { meta, fasta, fai, dict -> [ meta, fasta, fai ] }
+        CALL_VARIANTS.out.vcf
     )
+
     ch_variants = MERGE_VARIANTS.out.variants
+                    .map {
+                        vcf, tbi ->
+                            [ [ id: variant_type ], vcf, tbi ]
+                    }
+
+    // -----------------------------------------------------------------
+    // FILTERING
+    // -----------------------------------------------------------------
+
+    FILTER_VARIANTS( ch_variants )
+    ch_filtered_variants = FILTER_VARIANTS.out.variants
 
     // -----------------------------------------------------------------
     // STATS
     // -----------------------------------------------------------------
 
     STATISTICS (
-        ch_variants,
+        ch_filtered_variants,
         ch_genome_fai_dict
     )
 
 
     emit:
-    variants            = ch_variants
+    variants            = ch_filtered_variants
 
 }

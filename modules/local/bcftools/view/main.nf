@@ -1,6 +1,6 @@
-process BCFTOOLS_STATS {
-    tag "$meta.id"
-    label 'process_single'
+process BCFTOOLS_VIEW {
+    tag "${meta.id}"
+    label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
@@ -8,21 +8,22 @@ process BCFTOOLS_STATS {
         'community.wave.seqera.io/library/bcftools_htslib:0a3fa2654b52006f' }"
 
     input:
-    tuple val(meta),  path(vcf), path(tbi)
-    tuple val(meta2), path(fasta), path(fai)
+    tuple val(meta), path(vcf), path(tbi)
 
     output:
-    path("*stats.txt"),                                                                                                            topic: bcftools_stats
+    tuple val(meta), path("${prefix}.vcf.gz"), path("${prefix}.vcf.gz.tbi"), emit: vcf_tbi
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), topic: versions
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def reference_fasta = fasta ? "--fasta-ref ${fasta}" : ""
+    def args = task.ext.args ?: ""
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    bcftools stats \\
+    bcftools view \\
+        --output-type z \\
+        --output ${prefix}.vcf.gz \\
+        --write-index=tbi \\
+        --threads ${task.cpus} \\
         $args \\
-        $reference_fasta \\
-        $vcf > ${prefix}.bcftools_stats.txt
+        $vcf
     """
 }

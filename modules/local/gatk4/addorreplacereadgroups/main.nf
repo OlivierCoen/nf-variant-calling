@@ -15,7 +15,7 @@ process GATK4_ADDORREPLACEREADGROUPS {
     tuple val(meta), path("*.bam"),  emit: bam,  optional: true
     tuple val(meta), path("*.bai"),  emit: bai,  optional: true
     tuple val(meta), path("*.cram"), emit: cram, optional: true
-    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | sed 's/^.*(GATK) v//; s/ .*\$//'"), topic: versions
+    tuple val("${task.process}"), val('gatk4'), eval("gatk --version 2>&1 | grep 'The Genome Analysis Toolkit' | cut -d' ' -f6"), topic: versions
 
     script:
     def args = task.ext.args ?: ''

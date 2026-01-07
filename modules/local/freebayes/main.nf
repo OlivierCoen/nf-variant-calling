@@ -25,7 +25,6 @@ process FREEBAYES {
     # that's why we split the genome in multiple chunks and run freebayes in parallel on these chunks
     freebayes \\
         --fasta-reference ${fasta} \\
-        --gvcf \\
         ${args} \\
         --bam ${bam} \\
         --region ${region.chrom}:${region.start}-${region.end} \\
