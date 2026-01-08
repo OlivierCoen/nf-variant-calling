@@ -8,7 +8,8 @@ workflow CALL_VARIANTS {
     ch_bam_bai
     ch_genome_fai_dict
     ch_genome_region_file
-    variant_type
+    skip_call_snps_indels
+    skip_call_svs
 
     main:
 
@@ -18,33 +19,47 @@ workflow CALL_VARIANTS {
 
     ch_bam_bai_regions = ch_bam_bai.combine( ch_regions )
 
-    if ( variant_type == "snps_indels" ) {
+    ch_vcf = channel.empty()
 
-        // -----------------------------------------------------------------
-        // SNPS AND INDELS
-        // -----------------------------------------------------------------
+    // -----------------------------------------------------------------
+    // SNPS AND INDELS
+    // -----------------------------------------------------------------
+
+    if ( !skip_call_snps_indels ) {
 
         FREEBAYES (
             ch_bam_bai_regions,
             ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect()
         )
-        ch_vcf = FREEBAYES.out.vcf
 
-    } else if ( variant_type == "svs" ) {
+        ch_sns_indels = FREEBAYES.out.vcf
+                           .map {
+                                meta, vcf ->
+                                    [ meta + [ variant_type: 'snp_indel' ], vcf ]
+                            }
+        ch_vcf = ch_vcf.mix( ch_sns_indels )
 
-        // -----------------------------------------------------------------
-        // SVs
-        // -----------------------------------------------------------------
+    }
+
+    // -----------------------------------------------------------------
+    // SVs
+    // -----------------------------------------------------------------
+
+    if ( !skip_call_svs ) {
 
         DELLY_CALL(
             ch_bam_bai_regions,
             ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
             ch_genome_region_file.collect()
         )
-        ch_vcf = DELLY_CALL.out.vcf
 
-    } else {
-        error("Unsupported variant type: $variant_type")
+        ch_svs = DELLY_CALL.out.vcf
+                           .map {
+                                meta, vcf ->
+                                    [ meta + [ variant_type: 'structural_variant' ], vcf ]
+                            }
+        ch_vcf = ch_vcf.mix( ch_svs )
+
     }
 
     emit:

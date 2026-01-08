@@ -3,7 +3,7 @@ include { BCFTOOLS_STATS                                            } from '../.
 
 
 
-workflow VARIANT_STATISTICS {
+workflow DESCRIPTIVE_STATISTICS {
 
     take:
     ch_variants

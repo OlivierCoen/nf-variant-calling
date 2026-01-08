@@ -40,16 +40,25 @@ workflow MERGE_VARIANTS {
     // MERGE HORIZONTALLY ON SAMPLES
     // -----------------------------------------------------------------
 
+    ch_bcf_to_merge = BCFTOOLS_SORT_ALL.out.bcf
+                    .map {
+                        meta, file ->
+                            [ [ id: meta.variant_type ], file ]
+                    }
+                    .groupTuple()
+
+    ch_csi_to_merge = BCFTOOLS_SORT_ALL.out.csi
+                        .map {
+                            meta, file ->
+                                [ [ id: meta.variant_type ], file ]
+                        }
+                        .groupTuple()
+
     BCFTOOLS_MERGE (
-        BCFTOOLS_SORT_ALL.out.bcf.map { meta, file -> file }.collect(),
-        BCFTOOLS_SORT_ALL.out.csi.map { meta, file -> file }.collect()
+        ch_bcf_to_merge.join( ch_csi_to_merge )
     )
 
-    ch_vcf_tbi = BCFTOOLS_MERGE.out.vcf
-                    .mix( BCFTOOLS_MERGE.out.tbi )
-                    .collect()
-
     emit:
-    variants             = ch_vcf_tbi
+    vcf_tbi             = BCFTOOLS_MERGE.out.vcf_tbi
 
 }

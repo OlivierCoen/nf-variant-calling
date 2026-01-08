@@ -66,22 +66,45 @@ workflow PIPELINE_INITIALISATION {
     //
 
     ch_samplesheet = channel
-        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta, [ fastq_1 ] ]
-                } else {
-                    return [ meta, [ fastq_1, fastq_2 ] ]
-                }
-        }
+                        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+                        .map {
+                            meta, fastq_1, fastq_2 ->
+                                if (!fastq_2) {
+                                    return [ meta, [ fastq_1 ] ]
+                                } else {
+                                    return [ meta, [ fastq_1, fastq_2 ] ]
+                                }
+                        }
+
+    ch_reads = ch_samplesheet
+                    .map{
+                        meta, reads ->
+                            [ [ id: meta.id, lane: meta.lane ], reads ]
+                    }
+
+    ch_design_file = ch_samplesheet
+                    .map{
+                        meta, reads ->
+                            [ sample: meta.id, population: meta.population, phenotype: meta.phenotype ]
+                    }
+                    .unique()
+                    .collectFile(
+                        storeDir: "${params.outdir}",
+                        seed: "sample,population,phenotype",
+                        name: 'design.csv',
+                        sort: true,
+                        newLine: true
+                    ) {
+                        item -> "${item.sample},${item.population},${item.phenotype}"
+                    }
 
     validateInputSamplesheet(ch_samplesheet)
 
     ch_genome = Channel.fromPath( params.genome, checkIfExists: true ).map{ file -> [ [id: file.baseName ], file ] }
 
     emit:
-    samplesheet = ch_samplesheet
+    reads       = ch_reads
+    design_file = ch_design_file
     genome      = ch_genome
 }
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-
 import argparse
+import gzip
 import logging
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,8 +13,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 FIGZISE = (12, 6)
-
-OUTFILE_SUFFIX = "filtered.vcf"
 
 
 #####################################################
@@ -33,6 +32,13 @@ def parse_args():
         help="Path to VCF file",
     )
     parser.add_argument(
+        "--out",
+        type=Path,
+        dest="outfile",
+        required=True,
+        help="Path to output VCF file",
+    )
+    parser.add_argument(
         "--fai",
         type=Path,
         dest="fai_file",
@@ -40,32 +46,18 @@ def parse_args():
         help="Fai index file of the reference genome",
     )
     parser.add_argument(
+        "--min-depth-quantile",
+        dest="min_depth_quantile",
+        type=float,
+        default=0.1,
+        help="Minimum depth quantile",
+    )
+    parser.add_argument(
         "--max-depth-quantile",
         dest="max_depth_quantile",
         type=float,
         default=0.9,
         help="Maximum depth quantile",
-    )
-    parser.add_argument(
-        "--min-freq",
-        dest="min_allele_frequency",
-        type=float,
-        default=0.1,
-        help="Minimum allele frequency",
-    )
-    parser.add_argument(
-        "--max-freq",
-        dest="max_allele_frequency",
-        type=float,
-        default=0.99,
-        help="Maximum allele frequency",
-    )
-    parser.add_argument(
-        "--min-qual",
-        dest="min_quality",
-        type=float,
-        default=10,
-        help="Minimum quality score",
     )
     parser.add_argument(
         "--window-size",
@@ -77,107 +69,66 @@ def parse_args():
     return parser.parse_args()
 
 
-def clean_duplicated_sample_name(sample_name: str) -> str:
-    """
-    Clean string like LU26_M_LU26_M to get only LU26_M.
-    These duplicated strings are caused by nf-core/sarek
-    """
-    lst = sample_name.split("_")
-    if lst[:2] == lst[2:]:
-        return "_".join(lst[:2])
-    return sample_name
+def parse_vcf_header(vcf_file: Path) -> list:
+    header_lines = []
+    with gzip.open(vcf_file, "rb") as fin:
+        for line in fin.readlines():
+            line = line.decode("utf-8")
+            if line.startswith("##"):
+                header_lines.append(line)
+            else:
+                break
+    return header_lines
 
 
-def parse_vcf(vcf_file: Path) -> pl.LazyFrame:
+def parse_vcf_data(vcf_file: Path) -> pl.LazyFrame:
     return pl.scan_csv(
-        vcf_file, separator="\t", has_header=True, null_values="."
-    ).rename(lambda col: col.split("]")[1])
+        vcf_file, separator="\t", has_header=True, comment_prefix="##"
+    ).rename({"#CHROM": "CHROM"})
 
 
-def get_read_count_columns(vcf_lf: pl.LazyFrame, suffix: str) -> pl.DataFrame:
-    return (
-        vcf_lf.select(pl.col(f"^.*:{suffix}$"))
-        .rename(lambda col: col.split(":")[0])
-        .rename(clean_duplicated_sample_name)
-        # .fill_null(0)
-        .collect()
+def get_snps_with_too_low_depth(depth_df: pl.DataFrame, quantile: float):
+    too_low_df = depth_df.select(pl.all().lt(pl.all().quantile(quantile)))
+    return too_low_df.select(
+        (pl.sum_horizontal(pl.all() == 0) == 1).alias("not_too_low")
     )
 
 
-def mask_snps_with_too_low_depth(depth_df: pl.DataFrame, threshold: int):
-    return depth_df.select(not_too_low=pl.any_horizontal(pl.all() >= threshold))
-
-
-def mask_snps_with_too_high_depth(depth_df: pl.DataFrame, quantile: float):
-    # Check rows with no values exceeding the 90th percentile
-    too_high = depth_df.select(pl.all().gt(pl.all().quantile(quantile)))
-    return too_high.select(not_too_high=(pl.sum_horizontal(pl.all() == 0) == 1))
-
-
-def mask_too_rare_snps(
-    AO_df: pl.DataFrame,
-    depth_df: pl.DataFrame,
-    min_frequency: float,
-    max_frequency: float,
-):
-    freq_df = AO_df / depth_df
-    return freq_df.select(
-        not_too_rare=(
-            pl.sum_horizontal(pl.all().is_between(min_frequency, max_frequency)) == 1
-        ).fill_null(False)
+def get_snps_with_too_high_depth(depth_df: pl.DataFrame, quantile: float):
+    too_high_df = depth_df.select(pl.all().gt(pl.all().quantile(quantile)))
+    return too_high_df.select(
+        (pl.sum_horizontal(pl.all() == 0) == 1).alias("not_too_high")
     )
 
 
-def mask_snps_with_low_quality(vcf_df: pl.DataFrame, min_quality: float):
-    return vcf_df.select(not_low_quality=(pl.col("QUAL") >= min_quality))
+def get_filter_mask(
+    vcf_lf: pl.LazyFrame,
+    min_depth_quantile: float,
+    max_depth_quantile: float,
+) -> pl.Series:
+    depth_df = vcf_lf.select(
+        pl.col("INFO").str.extract(r"DP=(\d+);", 1).cast(pl.Int64).alias("total_depth")
+    ).collect()
+    nb_snps = len(depth_df)
 
-
-def get_filters(
-    vcf_df: pl.DataFrame,
-    AO_df: pl.DataFrame,
-    depth_df: pl.DataFrame,
-    args,
-):
-    too_low_depth_filter = mask_snps_with_too_low_depth(
-        depth_df, threshold=args.min_depth_threshold
+    not_too_low_depth_filter = get_snps_with_too_low_depth(
+        depth_df, quantile=min_depth_quantile
     )
     logger.info(
-        f"{len(too_low_depth_filter) - too_low_depth_filter.sum().item()} SNPs show too low depth"
+        f"{nb_snps - not_too_low_depth_filter.sum().item()} SNPs show too low depth"
     )
 
-    too_high_depth_filter = mask_snps_with_too_high_depth(
-        depth_df, quantile=args.max_depth_quantile
-    )
-    logger.info(
-        f"{len(too_low_depth_filter) - too_high_depth_filter.sum().item()} SNPs show too high depth"
+    not_too_high_depth_filter = get_snps_with_too_high_depth(
+        depth_df, quantile=max_depth_quantile
     )
 
-    too_rare_filter = mask_too_rare_snps(
-        AO_df,
-        depth_df,
-        min_frequency=args.min_allele_frequency,
-        max_frequency=args.max_allele_frequency,
-    )
     logger.info(
-        f"{len(too_low_depth_filter) - too_rare_filter.sum().item()} SNPs are too rare"
-    )
-
-    low_quality_filter = mask_snps_with_low_quality(
-        vcf_df,
-        min_quality=args.min_quality,
-    )
-    logger.info(
-        f"{len(too_low_depth_filter) - low_quality_filter.sum().item()} SNPs have low quality"
+        f"{nb_snps - not_too_high_depth_filter.sum().item()} SNPs show too high depth"
     )
 
     return (
         pl.concat(
-            [
-                too_low_depth_filter,
-                too_high_depth_filter,
-                too_rare_filter,
-                low_quality_filter,
-            ],
+            [not_too_low_depth_filter, not_too_high_depth_filter],
             how="horizontal",
         )
         .select(mask=pl.all_horizontal(pl.all()))
@@ -195,9 +146,11 @@ def range_starts(lengths: pl.Series) -> pl.Series:
     ).cum_sum()
 
 
-def get_genome_positions(vcf_df: pl.DataFrame, args):
+def get_genome_positions(
+    vcf_lf: pl.LazyFrame, fai_file: Path, window_size: int
+) -> pl.DataFrame:
     chrom_df = (
-        pl.scan_csv(args.fai_file, has_header=False, separator="\t")
+        pl.scan_csv(fai_file, has_header=False, separator="\t")
         .rename({"column_1": "chrom", "column_2": "len"})
         .with_columns(pl.col("chrom").str.strip_chars())
         .select(["chrom", "len"])
@@ -208,12 +161,14 @@ def get_genome_positions(vcf_df: pl.DataFrame, args):
     chroms_with_starts = chrom_df.with_columns(scaffold_start=scaff_starts)
 
     return (
-        vcf_df.join(chroms_with_starts, left_on="CHROM", right_on="chrom", how="left")
+        vcf_lf.select(["CHROM", "POS"])
+        .collect()
+        .join(chroms_with_starts, left_on="CHROM", right_on="chrom", how="left")
         .with_columns(
             (pl.col("POS") + pl.col("scaffold_start") - 1).alias("genome_position")
         )
         .with_columns(
-            ((pl.col("genome_position") // args.window_size) * args.window_size)
+            ((pl.col("genome_position") // window_size) * window_size)
             .cast(pl.Int64)
             .alias("window")
         )
@@ -234,8 +189,7 @@ def get_nb_filtered_snps_per_window(genome_positions: pl.DataFrame, mask: pl.Ser
     )
 
 
-def plot_effect_of_filters_on_snps(vcf_df, filters, args):
-    genome_positions = get_genome_positions(vcf_df, args)
+def plot_effect_of_filters_on_snps(filters: pl.Series, genome_positions: pl.DataFrame):
     n_snps = get_nb_snps_per_window(genome_positions)
     n_snps_filtered = get_nb_filtered_snps_per_window(genome_positions, filters)
 
@@ -266,28 +220,36 @@ def main():
     args = parse_args()
 
     logger.info("Parsing VCF file")
-    vcf_lf = parse_vcf(args.vcf_file)
+    vcf_lf = parse_vcf_data(args.vcf_file)
+    vcf_header_lines = parse_vcf_header(args.vcf_file)
+    nb_original_snps = vcf_lf.select(pl.len()).collect().item()
+    logger.info(f"Parsed {nb_original_snps} SNPs")
 
     logger.info("Separating read count columns")
-    AO_df = get_read_count_columns(vcf_lf, suffix="AO")
-    RO_df = get_read_count_columns(vcf_lf, suffix="RO")
-    # vcf_df = vcf_lf.select(pl.exclude(["REF", "ALT", "^.*:AO$", "^.*:RO$"])).collect()
-    vcf_df = vcf_lf.select(pl.exclude(["^.*:AO$", "^.*:RO$"])).collect()
 
-    depth_df = AO_df + RO_df
-
-    filters = get_filters(vcf_df, AO_df, depth_df, args)
-    logger.info(f"Kept {filters.sum()} SNPs out of {len(vcf_df)}")
+    filter_mask = get_filter_mask(
+        vcf_lf, args.min_depth_quantile, args.max_depth_quantile
+    )
+    logger.info(
+        f"Kept {filter_mask.sum()} SNPs out of {nb_original_snps} ({filter_mask.sum() / nb_original_snps:.2%})"
+    )
 
     logger.info("Plotting effect of filters on SNP density")
-    plot_effect_of_filters_on_snps(vcf_df, filters, args)
+    genome_positions = get_genome_positions(vcf_lf, args.fai_file, args.window_size)
+    plot_effect_of_filters_on_snps(filter_mask, genome_positions)
 
     logger.info("Applying filters")
-    vcf_df = vcf_df.filter(filters)
+    vcf_lf = vcf_lf.filter(filter_mask)
 
-    outfile = Path(args.vcf_file).with_suffix(OUTFILE_SUFFIX)
-    logger.info(f"Exporting VCF to {outfile}")
-    vcf_df.write_csv(outfile)
+    logger.info(f"Exporting fitlered VCF to {args.outfile}")
+
+    if vcf_lf.select(pl.len()).collect().item() == 0:
+        logger.info("No variants left after filtering")
+        sys.exit(0)
+
+    with open(args.outfile, "a") as fout:
+        fout.writelines(vcf_header_lines)
+        vcf_lf.collect().rename({"CHROM": "#CHROM"}).write_csv(fout, separator="\t")
 
 
 if __name__ == "__main__":

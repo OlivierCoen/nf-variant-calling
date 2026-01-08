@@ -1,5 +1,6 @@
 process BCFTOOLS_MERGE {
 
+    tag "${meta.id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -8,17 +9,15 @@ process BCFTOOLS_MERGE {
         'community.wave.seqera.io/library/bcftools_htslib:0a3fa2654b52006f' }"
 
     input:
-    path(vcfs)
-    path(tbis)
+    tuple val(meta), path(vcfs), path(tbis)
 
     output:
-    path("*.vcf.gz"), emit: vcf
-    path("*.tbi")   , emit: tbi
+    tuple val(meta), path("*.vcf.gz"), path("*.tbi"), emit: vcf_tbi
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), topic: versions
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "output"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def input = (vcfs.collect().size() > 1) ? vcfs.sort{ it.name } : vcfs
 
     """

@@ -1,5 +1,5 @@
 process BCFTOOLS_CONCAT {
-    tag "$meta.id"
+    tag "${meta.id} - ${meta.variant_type}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"

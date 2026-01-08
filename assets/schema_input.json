@@ -13,6 +13,18 @@
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
                 "meta": ["id"]
             },
+            "population": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Population name must be provided and cannot contain spaces",
+                "meta": ["population"]
+            },
+            "phenotype": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Phenotype name must be provided and cannot contain spaces",
+                "meta": ["phenotype"]
+            },
             "lane": {
                 "type": "string",
                 "pattern": "^\\S+$",

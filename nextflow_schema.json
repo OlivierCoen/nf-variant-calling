@@ -99,6 +99,20 @@
             "description": "Options for variant calling.",
             "required": ["input", "outdir"],
             "properties": {
+                "skip_call_snps_indels": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip calling SNPs and indels.",
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Use this option to skip calling SNPs and indels."
+                },
+                "skip_call_svs": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip calling structural variants.",
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Use this option to skip calling structural variants."
+                },
                 "reference_chunksize": {
                     "type": "integer",
                     "default": 1e6,

@@ -28,7 +28,8 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_nf_v
 workflow NF_VARIANT_CALLING {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
+    reads
+    design_file
     genome      // channel: genome file read in from --genome
 
     main:
@@ -37,7 +38,8 @@ workflow NF_VARIANT_CALLING {
     // WORKFLOW: Run pipeline
     //
     VARIANT_CALLING (
-        samplesheet,
+        reads,
+        design_file,
         genome
     )
     emit:
@@ -69,7 +71,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NF_VARIANT_CALLING (
-        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.reads,
+        PIPELINE_INITIALISATION.out.design_file,
         PIPELINE_INITIALISATION.out.genome
     )
     //

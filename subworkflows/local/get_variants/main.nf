@@ -44,7 +44,10 @@ workflow GET_VARIANTS {
     // FILTERING
     // -----------------------------------------------------------------
 
-    FILTER_VARIANTS( ch_variants )
+    FILTER_VARIANTS(
+        ch_variants,
+        ch_genome_fai_dict
+    )
     ch_filtered_variants = FILTER_VARIANTS.out.variants
 
     // -----------------------------------------------------------------

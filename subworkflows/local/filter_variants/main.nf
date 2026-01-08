@@ -1,4 +1,6 @@
-include { BCFTOOLS_VIEW                                        } from '../../../modules/local/bcftools/view'
+include { BCFTOOLS_VIEW as BASE_FILTERING                } from '../../../modules/local/bcftools/view'
+include { ADDITIONAL_FILTERING                           } from '../../../modules/local/additional_filtering'
+include { BCFTOOLS_INDEX                                 } from '../../../modules/nf-core/bcftools/index'
 
 
 
@@ -6,6 +8,7 @@ workflow FILTER_VARIANTS {
 
     take:
     ch_variants
+    ch_genome_fai_dict
 
     main:
 
@@ -13,10 +16,25 @@ workflow FILTER_VARIANTS {
     // BASE FILTERING
     // -----------------------------------------------------------------
 
-    BCFTOOLS_VIEW ( ch_variants )
+    BASE_FILTERING ( ch_variants )
 
+    // -----------------------------------------------------------------
+    // ADDITIONAL FILTERING
+    // -----------------------------------------------------------------
+
+    ADDITIONAL_FILTERING (
+        BASE_FILTERING.out.vcf_tbi.map { meta, vcf, tbi -> [ meta, vcf ] },
+        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, fai ] }.collect()
+    )
+    ch_filtered_vcf = ADDITIONAL_FILTERING.out.vcf
+
+    // -----------------------------------------------------------------
+    // INDEXING
+    // -----------------------------------------------------------------
+
+    BCFTOOLS_INDEX ( ch_filtered_vcf )
 
     emit:
-    variants = BCFTOOLS_VIEW.out.vcf_tbi
+    vcf_tbi = ch_filtered_vcf.join( BCFTOOLS_INDEX.out.tbi )
 
 }

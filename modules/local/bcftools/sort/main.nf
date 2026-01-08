@@ -1,5 +1,5 @@
 process BCFTOOLS_SORT {
-    tag "$meta.id"
+
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
