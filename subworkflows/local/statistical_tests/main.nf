@@ -1,5 +1,5 @@
-include { GET_ALLELE_COUNTS                                      } from '../../../modules/local/get_allele_counts'
-include { COCHRAN_MANTEL_HAENSEL_TEST                            } from '../../../modules/local/cochran_mantel_haensel_test'
+include { GET_ALLELE_COUNTS                    from '../../../modules/local/get_allele_counts'
+include { CMH_TEST                            } from '../../../modules/local/cmh_test'
 
 
 
@@ -21,7 +21,7 @@ workflow STATISTICAL_TESTS {
         ch_variants.map{ meta, vcf, tbi -> [ meta, vcf ] }
     )
 
-    COCHRAN_MANTEL_HAENSEL_TEST(
+    CMH_TEST(
         GET_ALLELE_COUNTS.out.counts,
         ch_design_file
     )

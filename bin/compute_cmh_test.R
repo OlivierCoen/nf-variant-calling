@@ -13,7 +13,7 @@ options(error = traceback)
 
 #####################################################
 #####################################################
-# ARG PARSER
+# FUNCTIONS
 #####################################################
 #####################################################
 
@@ -21,7 +21,8 @@ get_args <- function() {
     option_list <- list(
         make_option("--RO", dest="RO_file"),
         make_option("--AO", dest="AO_file"),
-        make_option("--design", dest="design_file")
+        make_option("--design", dest="design_file"),
+        make_option("--out", dest="output_file")
     )
 
     args <- parse_args(OptionParser(
@@ -31,13 +32,19 @@ get_args <- function() {
 }
 
 
-#####################################################
-#####################################################
-# UTILS
-#####################################################
-#####################################################
+get_sample_lists <- function(design) {
+    grouped_design <- design %>%
+        unique() %>%
+      arrange(population) %>%
+      group_by(phenotype) %>%
+      summarise(samples = list(sample), .groups = "drop")
 
-cmh_pval <- function(R0, R1, A0, A1, correct = TRUE) {
+  sample_lists <- grouped_design$samples
+  return(sample_lists)
+}
+
+
+get_cmh_pval <- function(R0, R1, A0, A1, correct = TRUE) {
     # matrices [n_snp × n_pop]
     # R for reference allele, A for alternative allele (but this can be swapped, as long as the same allele is the reference)
     # 0 for phenotype 0, 1 for phenotype 1 (whichever these are)
@@ -65,6 +72,7 @@ cmh_pval <- function(R0, R1, A0, A1, correct = TRUE) {
     stat <- numerator / denominator
     p <- pchisq(stat, 1, lower.tail = FALSE)
     p[!is.finite(p)] <- NA_real_
+
     return(p)
 }
 
@@ -84,13 +92,7 @@ main <- function() {
     AO <- read.csv(args$AO_file)
     design <- read.csv(args$design_file)
 
-    grouped_design <- design %>%
-        unique() %>%
-        arrange(population) %>%
-        group_by(phenotype) %>%
-        summarise(samples = list(sample), .groups = "drop")
-
-    sample_lists <- grouped_design$samples
+    sample_lists <- get_sample_lists(design)
 
     if (length(sample_lists) != 2) {
         error("Exactly two phenotypes needed here!")
@@ -102,8 +104,17 @@ main <- function() {
     message("Samples for phenotype 1: ", paste(samples_pheno_1, collapse = ", "))
     message("Samples for phenotype 2: ", paste(samples_pheno_2, collapse = ", "))
 
-    pVal <- cmh_pval(R0 = RO[,cbind(samples_pheno_1)], R1 = RO[,cbind(samples_pheno_2)], A0 = AO[,cbind(samples_pheno_1)], A1 = AO[,cbind(samples_pheno_2)], correct = T)
-    print(head(pVal))
+    p_values <- get_cmh_pval(
+      R0 = RO[,cbind(samples_pheno_1)],
+      R1 = RO[,cbind(samples_pheno_2)],
+      A0 = AO[,cbind(samples_pheno_1)],
+      A1 = AO[,cbind(samples_pheno_2)],
+      correct = TRUE
+    )
+
+    p_values <- p.adjust(p_values, method = "fdr")
+
+    write.table(p_values, file = args$output_file, row.names = FALSE, col.names = FALSE)
 }
 
 
