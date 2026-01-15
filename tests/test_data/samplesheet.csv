@@ -1,8 +1,9 @@
-sample,population,phenotype,lane,fastq_1,fastq_2
-ST24_F,ST24,F,L3,tests/test_data/ST24_F_L3_1.head.paired.fq.gz,tests/test_data/ST24_F_L3_2.head.paired.fq.gz
-ST24_F,ST24,F,L4,tests/test_data/ST24_F_L4_1.head.paired.fq.gz,tests/test_data/ST24_F_L4_2.head.paired.fq.gz
-ST24_M,ST24,M,L1,tests/test_data/ST24_M_L1_1.head.paired.fq.gz,tests/test_data/ST24_M_L1_2.head.paired.fq.gz
-LU26_F,LU26,F,L1,tests/test_data/LU26_F_L1_1.head.paired.fq.gz,tests/test_data/LU26_F_L1_2.head.paired.fq.gz
-LU26_M,LU26,M,L1,tests/test_data/LU26_M_L4_1.head.paired.fq.gz,tests/test_data/LU26_M_L4_2.head.paired.fq.gz
-PO21_F,PO21,F,L7,tests/test_data/PO21_F_L7_1.head.paired.fq.gz,tests/test_data/PO21_F_L7_2.head.paired.fq.gz
-PO21_M,PO21,M,L7,tests/test_data/PO21_M_L7_1.head.paired.fq.gz,tests/test_data/PO21_M_L7_2.head.paired.fq.gz
+sample,lane,fastq_1,fastq_2
+ST24_F,L3,tests/test_data/ST24_F_L3_1.head.paired.fq.gz,tests/test_data/ST24_F_L3_2.head.paired.fq.gz
+ST24_F,L4,tests/test_data/ST24_F_L4_1.head.paired.fq.gz,tests/test_data/ST24_F_L4_2.head.paired.fq.gz
+ST24_M,L1,tests/test_data/ST24_M_L1_1.head.paired.fq.gz,tests/test_data/ST24_M_L1_2.head.paired.fq.gz
+LU26_F,L1,tests/test_data/LU26_F_L1_1.head.paired.fq.gz,tests/test_data/LU26_F_L1_2.head.paired.fq.gz
+LU26_M,L1,tests/test_data/LU26_M_L4_1.head.paired.fq.gz,tests/test_data/LU26_M_L4_2.head.paired.fq.gz
+PO21_F,L4,tests/test_data/PO21_F_L4_1.head.paired.fq.gz,tests/test_data/PO21_F_L4_2.head.paired.fq.gz
+PO21_F,L7,tests/test_data/PO21_F_L7_1.head.paired.fq.gz,tests/test_data/PO21_F_L7_2.head.paired.fq.gz
+PO21_M,L7,tests/test_data/PO21_M_L7_1.head.paired.fq.gz,tests/test_data/PO21_M_L7_2.head.paired.fq.gz
