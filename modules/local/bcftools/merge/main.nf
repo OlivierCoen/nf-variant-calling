@@ -27,6 +27,7 @@ process BCFTOOLS_MERGE {
         --threads ${task.cpus} \\
         --output ${prefix}.vcf.gz \\
         --merge none \\
+        --force-single \\
         --write-index=tbi \\
         $input
     """

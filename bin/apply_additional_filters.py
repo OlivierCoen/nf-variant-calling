@@ -223,6 +223,11 @@ def main():
     vcf_lf = parse_vcf_data(args.vcf_file)
     vcf_header_lines = parse_vcf_header(args.vcf_file)
     nb_original_snps = vcf_lf.select(pl.len()).collect().item()
+
+    if nb_original_snps == 0:
+        logger.info("No SNPs found in VCF file")
+        sys.exit(0)
+
     logger.info(f"Parsed {nb_original_snps} SNPs")
 
     logger.info("Separating read count columns")
