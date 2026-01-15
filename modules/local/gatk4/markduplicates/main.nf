@@ -1,11 +1,11 @@
-process GATK4SPARK_MARKDUPLICATES {
+process GATK4_MARKDUPLICATES {
     tag "${meta.id}"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/49/498aea9c9bcaf736b9fb2a01366c1b7b38ccc0d38143178afc325d6a93241447/data'
-        : 'community.wave.seqera.io/library/gatk4-spark:4.6.2.0--8b5cd67ee60a714e'}"
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0/data'
+        : 'community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3'}"
 
     input:
     tuple val(meta), path(bam)
@@ -20,24 +20,23 @@ process GATK4SPARK_MARKDUPLICATES {
     script:
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}.bam"
-    def input_list = bam.collect { "--input ${it}" }.join(' ')
+    def input_list = bam.collect { "--INPUT ${it}" }.join(' ')
 
     def avail_mem = 3072
     if (!task.memory) {
-        log.info('[GATK MarkDuplicatesSpark] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.')
+        log.info('[GATK MarkDuplicates] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.')
     }
     else {
         avail_mem = (task.memory.mega * 0.8).intValue()
     }
     """
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
-        MarkDuplicatesSpark \\
+        MarkDuplicates \\
         ${input_list} \\
-        --output ${prefix} \\
-        --reference ${fasta} \\
-        --spark-master local[${task.cpus}] \\
-        --tmp-dir . \\
+        --OUTPUT ${prefix} \\
+        --REFERENCE_SEQUENCE ${fasta} \\
+        --METRICS_FILE ${prefix}.metrics \\
+        --TMP_DIR . \\
         ${args}
-
     """
 }

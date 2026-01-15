@@ -1,7 +1,7 @@
 include { BWAMEM2_INDEX                                             } from '../../../modules/nf-core/bwamem2/index'
 include { BWAMEM2_MEM                                               } from '../../../modules/local/bwamem2/mem'
 include { SAMTOOLS_MARKDUP                                          } from '../../../modules/local/samtools/markdup'
-include { GATK4SPARK_MARKDUPLICATES                                 } from '../../../modules/local/gatk4spark/markduplicates'
+include { GATK4_MARKDUPLICATES                                      } from '../../../modules/local/gatk4/markduplicates'
 include { SAMTOOLS_MERGE                                            } from '../../../modules/local/samtools/merge'
 include { GATK4_ADDORREPLACEREADGROUPS                              } from '../../../modules/local/gatk4/addorreplacereadgroups'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index'
@@ -58,11 +58,11 @@ workflow MAPPING_MARK_DUPLICATES {
 
     if ( params.markdup_method == "gatk" ) {
 
-        GATK4SPARK_MARKDUPLICATES (
+        GATK4_MARKDUPLICATES (
             ch_bam,
             ch_genome_fai_dict.collect()
         )
-        ch_markdupped_bam = GATK4SPARK_MARKDUPLICATES.out.output
+        ch_markdupped_bam = GATK4_MARKDUPLICATES.out.output
 
     } else {
 

@@ -14,8 +14,8 @@ process DELLY_CALL {
     path(all_regions_file)
 
     output:
-    tuple val(meta), path("*.vcf.gz")  , emit: vcf
-    tuple val(meta), path("*.{csi,tbi}")     , emit: csi
+    tuple val(meta), path("*.vcf.gz"),    optional: true, emit: vcf
+    tuple val(meta), path("*.{csi,tbi}"), optional: true, emit: csi
     tuple val("${task.process}"), val('delly'), eval("delly --version 2>&1 | sed 's/^.*Delly version: v//; s/ using.*\$//'"), topic: versions
 
 
