@@ -13,7 +13,7 @@ process CMH_TEST {
     path design
 
     output:
-    tuple val(meta),path("*.cmh_pvalues.txt"),                                                                     emit: pvalues
+    tuple val(meta), path("*.cmh_pvalues.txt"),                                                                     emit: pvalues
     tuple val("${task.process}"), val('R'),     eval('Rscript -e "cat(R.version.string)" | sed "s/R version //"'), topic: versions
     tuple val("${task.process}"), val('dplyr'), eval('Rscript -e "cat(as.character(packageVersion(\'dplyr\')))"'), topic: versions
 

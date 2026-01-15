@@ -1,4 +1,4 @@
-include { GET_ALLELE_COUNTS                    from '../../../modules/local/get_allele_counts'
+include { GET_ALLELE_COUNTS                   } from '../../../modules/local/get_allele_counts'
 include { CMH_TEST                            } from '../../../modules/local/cmh_test'
 
 
@@ -25,5 +25,8 @@ workflow STATISTICAL_TESTS {
         GET_ALLELE_COUNTS.out.counts,
         ch_design_file
     )
+
+    emit:
+    pvalues                             = CMH_TEST.out.pvalues
 
 }

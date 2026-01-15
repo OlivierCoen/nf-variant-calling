@@ -15,6 +15,8 @@ include { STATISTICAL_TESTS                                     } from '../subwo
 
 include { MULTIQC_WORKFLOW                                      } from '../subworkflows/local/multiqc'
 
+include { DASH_APP                                              } from '../modules/local/dash_app'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -108,12 +110,23 @@ workflow VARIANT_CALLING {
     )
 
     // -----------------------------------------------------------------
+    // DASH APPLICATION
+    // -----------------------------------------------------------------
+
+    DASH_APP(
+        ch_filtered_variants.map{ meta, file, index -> file }.collect(),
+        STATISTICAL_TESTS.out.pvalues.map{ meta, file -> file }.collect()
+    )
+
+    // -----------------------------------------------------------------
     // MULTIQC
     // -----------------------------------------------------------------
 
     ch_versions = ch_versions
                     .mix ( GENOME_PREPARATION.out.versions )
                     .mix ( MAPPING_MARK_DUPLICATES.out.versions )
+                    .mix ( DASH_APP.out.versions )
+
 
     MULTIQC_WORKFLOW(
         ch_multiqc_files,
