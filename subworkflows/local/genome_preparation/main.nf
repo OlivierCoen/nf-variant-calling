@@ -10,8 +10,6 @@ workflow GENOME_PREPARATION {
 
     main:
 
-    ch_versions = Channel.empty()
-
     // -----------------------------------------------------------------
     // INDEX GENOME
     // -----------------------------------------------------------------
@@ -39,5 +37,5 @@ workflow GENOME_PREPARATION {
     fai                 = SAMTOOLS_FAIDX.out.fai
     region_file         = MAKE_GENOME_REGIONS.out.regions
     dict                = GATK4_CREATESEQUENCEDICTIONARY.out.dict
-    versions            = ch_versions
+
 }

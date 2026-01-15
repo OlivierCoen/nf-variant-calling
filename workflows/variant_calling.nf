@@ -123,8 +123,6 @@ workflow VARIANT_CALLING {
     // -----------------------------------------------------------------
 
     ch_versions = ch_versions
-                    .mix ( GENOME_PREPARATION.out.versions )
-                    .mix ( MAPPING_MARK_DUPLICATES.out.versions )
                     .mix ( DASH_APP.out.versions )
 
 

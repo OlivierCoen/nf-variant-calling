@@ -1,6 +1,6 @@
 include { BCFTOOLS_VIEW as BASE_FILTERING                } from '../../../modules/local/bcftools/view'
 include { ADDITIONAL_FILTERING                           } from '../../../modules/local/additional_filtering'
-include { BCFTOOLS_INDEX                                 } from '../../../modules/nf-core/bcftools/index'
+include { BCFTOOLS_INDEX                                 } from '../../../modules/local/bcftools/index'
 
 
 

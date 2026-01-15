@@ -1,10 +1,10 @@
-include { BWAMEM2_INDEX                                             } from '../../../modules/nf-core/bwamem2/index'
+include { BWAMEM2_INDEX                                             } from '../../../modules/local/bwamem2/index'
 include { BWAMEM2_MEM                                               } from '../../../modules/local/bwamem2/mem'
 include { SAMTOOLS_MARKDUP                                          } from '../../../modules/local/samtools/markdup'
 include { GATK4_MARKDUPLICATES                                      } from '../../../modules/local/gatk4/markduplicates'
 include { SAMTOOLS_MERGE                                            } from '../../../modules/local/samtools/merge'
 include { GATK4_ADDORREPLACEREADGROUPS                              } from '../../../modules/local/gatk4/addorreplacereadgroups'
-include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index'
+include { SAMTOOLS_INDEX                                            } from '../../../modules/local/samtools/index'
 include { SAMTOOLS_FLAGSTAT                                         } from '../../../modules/local/samtools/flagstat'
 
 
@@ -16,8 +16,6 @@ workflow MAPPING_MARK_DUPLICATES {
     ch_genome_fai_dict
 
     main:
-
-    ch_versions = Channel.empty()
 
     // -----------------------------------------------------------------
     // MAPPING
@@ -85,12 +83,7 @@ workflow MAPPING_MARK_DUPLICATES {
     SAMTOOLS_FLAGSTAT( ch_bam_bai )
 
 
-    ch_versions = ch_versions
-                    .mix ( BWAMEM2_INDEX.out.versions )
-                    .mix ( SAMTOOLS_INDEX.out.versions )
-
-
     emit:
     bam_bai                 = ch_bam_bai
-    versions                = ch_versions
+
 }

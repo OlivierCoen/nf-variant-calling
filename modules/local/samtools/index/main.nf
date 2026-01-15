@@ -1,0 +1,28 @@
+process SAMTOOLS_INDEX {
+    tag "$meta.id"
+    label 'process_low'
+
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/samtools:1.22.1--h96c455f_0' :
+        'biocontainers/samtools:1.22.1--h96c455f_0' }"
+
+    input:
+    tuple val(meta), path(input)
+
+    output:
+    tuple val(meta), path("*.bai") , optional:true, emit: bai
+    tuple val(meta), path("*.csi") , optional:true, emit: csi
+    tuple val(meta), path("*.crai"), optional:true, emit: crai
+    tuple val("${task.process}"), val('samtools'), eval('samtools --version | head -1 | awk "{print $2}"'), topic: versions
+
+    script:
+    def args = task.ext.args ?: ''
+    """
+    samtools \\
+        index \\
+        -@ ${task.cpus} \\
+        $args \\
+        $input
+    """
+}
