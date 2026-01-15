@@ -19,7 +19,7 @@ process GATK4_MARKDUPLICATES {
 
     script:
     def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}.bam"
+    prefix = task.ext.prefix ?: "${meta.id}.marddupped.bam"
     def input_list = bam.collect { "--INPUT ${it}" }.join(' ')
 
     def avail_mem = 3072

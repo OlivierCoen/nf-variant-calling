@@ -95,7 +95,8 @@ main <- function() {
     sample_lists <- get_sample_lists(design)
 
     if (length(sample_lists) != 2) {
-        error("Exactly two phenotypes needed here!")
+        message("Exactly two phenotypes needed here!")
+        quit(save = "no", status = 1)
     }
 
     samples_pheno_1 <- sample_lists[[1]]

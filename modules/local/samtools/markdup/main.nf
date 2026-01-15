@@ -1,5 +1,5 @@
 process SAMTOOLS_MARKDUP {
-    tag "${meta.id} - ${meta.lane}"
+    tag "${meta.id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
