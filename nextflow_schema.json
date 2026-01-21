@@ -115,7 +115,7 @@
                 },
                 "reference_chunksize": {
                     "type": "integer",
-                    "default": 1e6,
+                    "default": 1e8,
                     "description": "Maximum length of reference FASTA file to use with FreeBayes.",
                     "fa_icon": "fas fa-terminal",
                     "help_text": "Maximum length of reference FASTA file to use with FreeBayes."
