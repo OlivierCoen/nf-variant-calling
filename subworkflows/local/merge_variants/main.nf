@@ -1,9 +1,7 @@
 include { BCFTOOLS_SORT as BCFTOOLS_SORT_CHUNK                           } from '../../../modules/local/bcftools/sort'
 include { BCFTOOLS_SORT as BCFTOOLS_SORT_ALL                             } from '../../../modules/local/bcftools/sort'
 include { BCFTOOLS_CONCAT                                                } from '../../../modules/local/bcftools/concat'
-include { BCFTOOLS_MERGE                                                 } from '../../../modules/local/bcftools/merge'
-
-
+include { BCFTOOLS_INDEX                                                 } from '../../../modules/local/bcftools/index'
 
 
 workflow MERGE_VARIANTS {
@@ -35,30 +33,16 @@ workflow MERGE_VARIANTS {
     // -----------------------------------------------------------------
 
     BCFTOOLS_SORT_ALL ( BCFTOOLS_CONCAT.out.bcf )
+    ch_concatenated_vcf = BCFTOOLS_SORT_ALL.out.vcf
 
     // -----------------------------------------------------------------
     // MERGE HORIZONTALLY ON SAMPLES
     // -----------------------------------------------------------------
 
-    ch_bcf_to_merge = BCFTOOLS_SORT_ALL.out.bcf
-                    .map {
-                        meta, file ->
-                            [ [ id: meta.variant_type ], file ]
-                    }
-                    .groupTuple()
-
-    ch_csi_to_merge = BCFTOOLS_SORT_ALL.out.csi
-                        .map {
-                            meta, file ->
-                                [ [ id: meta.variant_type ], file ]
-                        }
-                        .groupTuple()
-
-    BCFTOOLS_MERGE (
-        ch_bcf_to_merge.join( ch_csi_to_merge )
-    )
+    BCFTOOLS_INDEX ( ch_concatenated_vcf )
+    ch_vcf_tbi = ch_concatenated_vcf.join( BCFTOOLS_INDEX.out.tbi )
 
     emit:
-    vcf_tbi             = BCFTOOLS_MERGE.out.vcf_tbi
+    vcf_tbi             = ch_vcf_tbi
 
 }

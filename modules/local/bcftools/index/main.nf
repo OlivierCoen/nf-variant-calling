@@ -11,8 +11,8 @@ process BCFTOOLS_INDEX {
     tuple val(meta), path(vcf)
 
     output:
-    tuple val(meta), path("*.csi"), optional:true, emit: csi
-    tuple val(meta), path("*.tbi"), optional:true, emit: tbi
+    tuple val(meta), path("*.csi"), optional: true, emit: csi
+    tuple val(meta), path("*.tbi"), optional: true, emit: tbi
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), topic: versions
 
     script:
