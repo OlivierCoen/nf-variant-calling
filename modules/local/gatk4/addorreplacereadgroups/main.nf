@@ -43,7 +43,7 @@ process GATK4_ADDORREPLACEREADGROUPS {
         ${create_index} \\
         --INPUT ${bam} \\
         --OUTPUT ${prefix}.${suffix} \\
-        --RGID ${meta.lane} \\
+        --RGID ${meta.id} \\
         --RGLB Library1 \\
         --RGPL Illumina \\
         --RGSM ${meta.id} \\

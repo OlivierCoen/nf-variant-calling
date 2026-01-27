@@ -37,7 +37,8 @@ workflow VARIANT_CALLING {
 
     GENOME_PREPARATION(
         ch_genome,
-        params.reference_chunksize
+        params.reference_chunksize,
+        params.ratio_overlap_to_chunksize
     )
 
     ch_genome_fai_dict = ch_genome
@@ -61,14 +62,14 @@ workflow VARIANT_CALLING {
         ch_reads,
         ch_genome_fai_dict
     )
-    ch_bam_bai = MAPPING_MARK_DUPLICATES.out.bam_bai
 
     /// -----------------------------------------------------------------
     // CALL VARIANTS
     // -----------------------------------------------------------------
 
     CALL_VARIANTS(
-        ch_bam_bai,
+        MAPPING_MARK_DUPLICATES.out.bam,
+        MAPPING_MARK_DUPLICATES.out.bai,
         ch_genome_fai_dict,
         ch_genome_region_file,
         params.skip_call_snps_indels,

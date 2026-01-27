@@ -9,8 +9,8 @@ process FREEBAYES {
         : 'biocontainers/freebayes:1.3.10--hbefcdb2_0'}"
 
     input:
-    tuple val(meta), path(bam), path(bai), val(region)
-    tuple val(meta2), path(fasta), path(fai)
+    tuple path(bam_files), path(bai_files), val(region)
+    tuple val(meta), path(fasta), path(fai)
 
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
@@ -26,7 +26,7 @@ process FREEBAYES {
     freebayes \\
         --fasta-reference ${fasta} \\
         ${args} \\
-        --bam ${bam} \\
+        --bam ${bam_files} \\
         --region ${region.chrom}:${region.start}-${region.end} \\
         --vcf ${prefix}.vcf
 

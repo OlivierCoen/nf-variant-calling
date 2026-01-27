@@ -74,16 +74,19 @@ workflow MAPPING_MARK_DUPLICATES {
     // -----------------------------------------------------------------
 
     SAMTOOLS_INDEX ( ch_markdupped_bam )
-    ch_bam_bai = ch_markdupped_bam.join( SAMTOOLS_INDEX.out.bai )
+    ch_markdupped_bai = SAMTOOLS_INDEX.out.bai
 
     // -----------------------------------------------------------------
     // MAPPING STATS
     // -----------------------------------------------------------------
 
-    SAMTOOLS_FLAGSTAT( ch_bam_bai )
+    SAMTOOLS_FLAGSTAT(
+        ch_markdupped_bam.join( ch_markdupped_bai )
+    )
 
 
     emit:
-    bam_bai                 = ch_bam_bai
+    bam                = ch_markdupped_bam
+    bai                = ch_markdupped_bai
 
 }

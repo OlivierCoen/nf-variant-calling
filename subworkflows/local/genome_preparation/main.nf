@@ -1,5 +1,5 @@
 include { SAMTOOLS_FAIDX                                        } from '../../../modules/local/samtools/faidx'
-include { MAKE_GENOME_REGIONS                                   } from '../../../modules/local/make_genome_regions'
+include { MAKE_GENOME_REGIONS_WITH_OVERLAPS                     } from '../../../modules/local/make_genome_regions_with_overlaps'
 include { GATK4_CREATESEQUENCEDICTIONARY                        } from '../../../modules/local/gatk4/createsequencedictionary'
 
 workflow GENOME_PREPARATION {
@@ -7,6 +7,7 @@ workflow GENOME_PREPARATION {
     take:
     ch_genome
     reference_chunksize
+    ratio_overlap_to_chunksize
 
     main:
 
@@ -20,9 +21,10 @@ workflow GENOME_PREPARATION {
     // MAKE GENOME REGION CHUNKS
     // -----------------------------------------------------------------
 
-    MAKE_GENOME_REGIONS(
+    MAKE_GENOME_REGIONS_WITH_OVERLAPS(
         ch_genome,
-        reference_chunksize
+        reference_chunksize,
+        ratio_overlap_to_chunksize
     )
 
     // -----------------------------------------------------------------
@@ -35,7 +37,7 @@ workflow GENOME_PREPARATION {
 
     emit:
     fai                 = SAMTOOLS_FAIDX.out.fai
-    region_file         = MAKE_GENOME_REGIONS.out.regions
+    region_file         = MAKE_GENOME_REGIONS_WITH_OVERLAPS.out.regions
     dict                = GATK4_CREATESEQUENCEDICTIONARY.out.dict
 
 }

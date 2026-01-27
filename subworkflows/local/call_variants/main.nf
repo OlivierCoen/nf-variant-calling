@@ -5,7 +5,8 @@ include { DELLY_CALL                                            } from '../../..
 workflow CALL_VARIANTS {
 
     take:
-    ch_bam_bai
+    ch_bam
+    ch_bai
     ch_genome_fai_dict
     ch_genome_region_file
     skip_call_snps_indels
@@ -13,11 +14,28 @@ workflow CALL_VARIANTS {
 
     main:
 
+    // -----------------------------------------------------------------
+    // PREPARE INPUT FILES
+    // -----------------------------------------------------------------
+
     ch_regions = ch_genome_region_file
                     .splitCsv(sep: "\t")
                     .map { row -> [chrom: row[0], start: row[1], end: row[2]] }
 
-    ch_bam_bai_regions = ch_bam_bai.combine( ch_regions )
+
+    ch_all_bams = ch_bam
+                    .map { meta, bam -> bam }
+                    .collect()
+                    .map { bam_files -> [ bam_files ] }
+
+    ch_all_bais = ch_bai
+                    .map { meta, bai -> bai }
+                    .collect()
+                    .map { bai_files -> [ bai_files ] }
+
+    ch_all_bam_bai_with_region = ch_all_bams
+                                  .combine( ch_all_bais )
+                                  .combine( ch_regions )
 
     ch_vcf = channel.empty()
 
@@ -28,7 +46,7 @@ workflow CALL_VARIANTS {
     if ( !skip_call_snps_indels ) {
 
         FREEBAYES (
-            ch_bam_bai_regions,
+            ch_all_bam_bai_with_region,
             ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect()
         )
 
@@ -48,7 +66,7 @@ workflow CALL_VARIANTS {
     if ( !skip_call_svs ) {
 
         DELLY_CALL(
-            ch_bam_bai_regions,
+            ch_all_bam_bai_with_region,
             ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
             ch_genome_region_file.collect()
         )

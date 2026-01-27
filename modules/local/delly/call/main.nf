@@ -18,8 +18,8 @@ process DELLY_CALL {
         'community.wave.seqera.io/library/delly:1.7.2--a8cf3dbcfe03c0dd' }"
 
     input:
-    tuple val(meta), path(bam), path(bai), val(region)
-    tuple val(meta2), path(fasta), path(fai)
+    tuple path(bam_files), path(bai_files), val(region)
+    tuple val(meta), path(fasta), path(fai)
     path(all_regions_file)
 
     output:
@@ -41,7 +41,7 @@ process DELLY_CALL {
         --threads ${task.cpus} \\
         ${args} \\
         --genome ${fasta} \\
-        ${bam} \\
+        ${bam_files} \\
         | bgzip ${args2} --threads ${task.cpus} --stdout \\
         > ${prefix}.vcf.gz && tabix ${prefix}.vcf.gz
     """

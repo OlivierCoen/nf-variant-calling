@@ -29,18 +29,32 @@ def parse_args():
     parser.add_argument(
         "--chunksize", type=int, required=True, help="Size of the regions"
     )
+    parser.add_argument(
+        "--ratio-overlap-to-chunksize",
+        dest="ratio_overlap_to_chunksize",
+        type=float,
+        required=True,
+        help="Ratio of overlap to chunksize",
+    )
     return parser.parse_args()
 
 
-def make_genome_regions(genome_file: Path, chunksize: int):
+def get_overlap_size(chunksize: int, ratio_overlap_to_chunksize: float) -> int:
+    return max(1, int(chunksize * ratio_overlap_to_chunksize))
+
+
+def make_genome_regions(
+    genome_file: Path, chunksize: int, overlap: int
+) -> list[tuple[str, int, int]]:
     regions = []
     with open(genome_file, "r") as f:
-        for chrom in SeqIO.parse(f, "fasta"):
-            for i in range(0, len(chrom), chunksize):
-                # make list chunk
-                start = i
-                end = min(i + chunksize, len(chrom))
-                regions.append((chrom.id, start, end))
+        for contig in SeqIO.parse(f, "fasta"):
+            for i in range(0, len(contig), chunksize):
+                # if lower than zero (for instance for the first chunk: sets to 0
+                start = max(0, i - overlap)
+                # if exceeds the right limit of the cotig, sets to the end of the contig
+                end = min(len(contig), i + chunksize + overlap)
+                regions.append((contig.id, start, end))
     return regions
 
 
@@ -52,7 +66,13 @@ def make_genome_regions(genome_file: Path, chunksize: int):
 
 if __name__ == "__main__":
     args = parse_args()
-    regions = make_genome_regions(args.genome, args.chunksize)
+
+    overlap = get_overlap_size(args.chunksize, args.ratio_overlap_to_chunksize)
+    logger.info(f"Overlap: {overlap}")
+
+    regions = make_genome_regions(args.genome, args.chunksize, overlap)
+
+    logger.info(f"Total nb of regions: {len(regions)}")
 
     with open(OUTFILE, "w") as f:
         for region in regions:

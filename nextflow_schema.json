@@ -115,10 +115,17 @@
                 },
                 "reference_chunksize": {
                     "type": "integer",
-                    "default": 1e8,
+                    "default": 1e7,
                     "description": "Maximum length of reference FASTA file to use with FreeBayes.",
                     "fa_icon": "fas fa-terminal",
                     "help_text": "Maximum length of reference FASTA file to use with FreeBayes."
+                },
+                "ratio_overlap_to_chunksize": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Ratio of overlap to chunksize",
+                    "fa_icon": "fas fa-terminal",
+                    "help_text": "Ratio of overlap to chunksize on each side. For example, a value of 0.1 means that the chunksize will be extended by 10% on each side."
                 }
             }
         },
