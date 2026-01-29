@@ -14,7 +14,7 @@ process FREEBAYES {
 
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
-    tuple val("${task.process}"), val('freebayes'), eval("freebayes --version 2>&1 | sed 's/version:\s*v//g'"),    topic: versions
+    tuple val("${task.process}"), val('freebayes'), eval("freebayes --version 2>&1 | sed 's/version:\s*v//g'"), topic: versions
 
 
     script:
