@@ -4,8 +4,8 @@ process VCF_ADDTIONAL_FILTERS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        '':
-        '' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b5/b51efb1ddfde9f1ab70471cd39d363963434e61ea4f40afe51b57eb945412a66/data':
+        'community.wave.seqera.io/library/tabix_matplotlib_polars_python:60e45a5643dbfbbc' }"
 
     input:
     tuple val(meta), path(vcf)
