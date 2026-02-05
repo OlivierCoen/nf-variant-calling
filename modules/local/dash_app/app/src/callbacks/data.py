@@ -1,5 +1,6 @@
 import dash_bio
 from dash_extensions.enrich import Input, Output, State, Trigger, callback
+
 from src.utils.data_management import DataManager
 
 data_manager = DataManager()
@@ -35,31 +36,25 @@ def register_callbacks():
     @callback(
         Output("snp-indel-graph", "figure"),
         Output("sv-graph", "figure"),
-        Output("snp-indel-graph", "style"),
-        Output("sv-graph", "style"),
-        Input("snp-indel-min-quality-log", "value"),
-        State("snp-indel-graph", "style"),
-        State("sv-graph", "style"),
+        Input("snp-indel-range-quality", "value"),
+        Input("snp-indel-range-depth", "value"),
     )
-    def update_graph_data(
-        min_quality_log: float, snp_indel_graph_style: dict, sv_graph_style: dict
-    ):
+    def update_graph_data(quality_range: list[int], depth_range: list[int]):
         figures = {}
-        styles = {"snp_indel": snp_indel_graph_style, "sv": sv_graph_style}
 
         for data_type in ["snp_indel", "sv"]:
-            df = data_manager.get_manhattanplot_data(data_type, min_quality_log)
+            df = data_manager.get_manhattanplot_data(
+                data_type, quality_range, depth_range
+            )
 
             if df.empty:
                 fig = {}
-                styles[data_type]["display"] = "none"
             else:
                 fig = dash_bio.ManhattanPlot(
                     dataframe=df,
                     **manhattan_plot_kwargs,
                 )
-                styles[data_type]["display"] = "block"
 
             figures[data_type] = fig
 
-        return tuple(list(figures.values()) + list(styles.values()))
+        return tuple(list(figures.values()))

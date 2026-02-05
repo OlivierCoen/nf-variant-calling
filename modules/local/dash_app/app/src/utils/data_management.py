@@ -1,9 +1,16 @@
+import logging
 from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
 import polars as pl
+
 from src.utils import config
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=None)
@@ -21,14 +28,17 @@ class DataManager:
             ),
         )
         # compute other static values
-        self.data = {}
+        self.variants = {}
         for key in raw_data:
-            self.data[key] = self.prepare_data(
+            logger.info(f"Preparing {key} data")
+            self.variants[key] = self.prepare_data(
                 raw_data[key]["variants"], raw_data[key]["pvalues"]
             )
+            logger.info(f"{key} data loaded")
 
     @staticmethod
     def parse_vcf_data(vcf_file: str) -> pl.LazyFrame | None:
+        logger.info(f"Parsing {vcf_file} VCF file")
         if not Path(vcf_file).is_file():
             return None
         return pl.scan_csv(
@@ -37,6 +47,7 @@ class DataManager:
 
     @staticmethod
     def parse_pvalues(cmh_pvalues_file: str) -> list[float | None] | None:
+        logger.info(f"Parsing p-values from {cmh_pvalues_file}")
         if not Path(cmh_pvalues_file).is_file():
             return None
         pvalues = []
@@ -89,11 +100,42 @@ class DataManager:
         ).to_series()
 
     @staticmethod
-    def get_chrom_ame_mapping(vcf_lf: pl.LazyFrame) -> dict[str, int]:
+    def get_chrom_name_mapping(vcf_lf: pl.LazyFrame) -> dict[str, int]:
         unique_chroms = (
             vcf_lf.select("CHROM").collect().unique().sort("CHROM").to_series()
         )
         return {chrom: i + 1 for i, chrom in enumerate(unique_chroms)}
+
+    @staticmethod
+    def extract_total_depth(vcf_lf: pl.LazyFrame) -> pl.Series:
+        return (
+            vcf_lf.select(
+                pl.col("INFO")
+                .str.extract(r"DP=(\d+)")
+                .cast(pl.Int64)
+                .alias("total_depth")
+            )
+            .collect()
+            .to_series()
+        )
+
+    def get_max(self, value: str, variant_type: str) -> int:
+        return (
+            self.variants[variant_type]
+            .select(pl.col(value).max().alias("max_val"))
+            .collect()
+            .to_series()
+            .item(0)
+        )
+
+    def get_min(self, value: str, variant_type: str) -> int:
+        return (
+            self.variants[variant_type]
+            .select(pl.col(value).min().alias("min_val"))
+            .collect()
+            .to_series()
+            .item(0)
+        )
 
     @staticmethod
     def prepare_data(
@@ -102,13 +144,15 @@ class DataManager:
         if vcf_lf is None:
             return None
 
-        chrom_to_index = DataManager.get_chrom_ame_mapping(vcf_lf)
+        chrom_to_index = DataManager.get_chrom_name_mapping(vcf_lf)
         annot_series = DataManager.get_annotation(vcf_lf)
+        total_depth_series = DataManager.extract_total_depth(vcf_lf)
 
         return vcf_lf.select(
             pl.col("CHROM").replace(chrom_to_index).cast(pl.Int64).alias("chromosome"),
             pl.col("POS").cast(pl.Int64).alias("position"),
             pl.col("QUAL").cast(pl.Float64).alias("quality"),
+            total_depth_series.alias("total_depth"),
             (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("snp"),
             (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("gene"),
             pl.Series(pvalues).cast(pl.Float64).alias("cmh_pvalue"),
@@ -116,13 +160,14 @@ class DataManager:
         ).filter(pl.col("cmh_pvalue").is_not_null())
 
     def get_manhattanplot_data(
-        self, data_type: str, min_quality: float
+        self, data_type: str, quality_range: list[int], depth_range: list[int]
     ) -> pd.DataFrame:
-        if self.data[data_type] is None:
+        if self.variants[data_type] is None:
             return pd.DataFrame()
         return (
-            self.data[data_type]
-            .filter(pl.col("quality") >= min_quality)
+            self.variants[data_type]
+            .filter(pl.col("quality").is_between(quality_range[0], quality_range[1]))
+            .filter(pl.col("total_depth").is_between(depth_range[0], depth_range[1]))
             .collect()
             .to_pandas()
         )

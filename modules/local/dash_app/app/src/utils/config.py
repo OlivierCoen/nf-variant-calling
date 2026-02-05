@@ -10,8 +10,9 @@ UPDATE_TITLE = "Updating ..."
 DATA_FOLDER = "data"
 
 SNP_INDEL = {
-    "vcf_file": "data/snp_indel.filtered.vcf.gz",
-    "pvalues_file": "data/snp_indel.cmh_pvalues.txt",
+    # "vcf_file": "data/snp_indel.filtered.vcf.gz",
+    "vcf_file": "data/snp_indel.filtered.sorted.ntLink_0.vcf",
+    "pvalues_file": "data/snp_indel.cmh_pvalues.head.txt",
 }
 
 
