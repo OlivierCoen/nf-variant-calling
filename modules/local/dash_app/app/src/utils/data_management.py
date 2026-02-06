@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pandas as pd
 import polars as pl
-
 from src.utils import config
 
 logging.basicConfig(
@@ -16,15 +15,17 @@ logger = logging.getLogger(__name__)
 @lru_cache(maxsize=None)
 class DataManager:
     def __init__(self):
+
+        folder = Path(config.DATA_FOLDER)
         # parse initial data
         raw_data = dict(
             snp_indel=dict(
-                variants=self.parse_vcf_data(config.SNP_INDEL["vcf_file"]),
-                pvalues=self.parse_pvalues(config.SNP_INDEL["pvalues_file"]),
+                variants=self.parse_vcf_data(folder / config.SNP_INDEL["vcf_file"]),
+                pvalues=self.parse_pvalues(folder / config.SNP_INDEL["pvalues_file"]),
             ),
             sv=dict(
-                variants=self.parse_vcf_data(config.SV["vcf_file"]),
-                pvalues=self.parse_pvalues(config.SV["pvalues_file"]),
+                variants=self.parse_vcf_data(folder / config.SV["vcf_file"]),
+                pvalues=self.parse_pvalues(folder / config.SV["pvalues_file"]),
             ),
         )
         # compute other static values
@@ -37,7 +38,7 @@ class DataManager:
             logger.info(f"{key} data loaded")
 
     @staticmethod
-    def parse_vcf_data(vcf_file: str) -> pl.LazyFrame | None:
+    def parse_vcf_data(vcf_file: Path) -> pl.LazyFrame | None:
         logger.info(f"Parsing {vcf_file} VCF file")
         if not Path(vcf_file).is_file():
             return None
@@ -46,7 +47,7 @@ class DataManager:
         ).rename({"#CHROM": "CHROM"})
 
     @staticmethod
-    def parse_pvalues(cmh_pvalues_file: str) -> list[float | None] | None:
+    def parse_pvalues(cmh_pvalues_file: Path) -> list[float | None] | None:
         logger.info(f"Parsing p-values from {cmh_pvalues_file}")
         if not Path(cmh_pvalues_file).is_file():
             return None
@@ -100,13 +101,6 @@ class DataManager:
         ).to_series()
 
     @staticmethod
-    def get_chrom_name_mapping(vcf_lf: pl.LazyFrame) -> dict[str, int]:
-        unique_chroms = (
-            vcf_lf.select("CHROM").collect().unique().sort("CHROM").to_series()
-        )
-        return {chrom: i + 1 for i, chrom in enumerate(unique_chroms)}
-
-    @staticmethod
     def extract_total_depth(vcf_lf: pl.LazyFrame) -> pl.Series:
         return (
             vcf_lf.select(
@@ -144,12 +138,11 @@ class DataManager:
         if vcf_lf is None:
             return None
 
-        chrom_to_index = DataManager.get_chrom_name_mapping(vcf_lf)
         annot_series = DataManager.get_annotation(vcf_lf)
         total_depth_series = DataManager.extract_total_depth(vcf_lf)
 
         return vcf_lf.select(
-            pl.col("CHROM").replace(chrom_to_index).cast(pl.Int64).alias("chromosome"),
+            pl.col("CHROM").alias("chromosome"),
             pl.col("POS").cast(pl.Int64).alias("position"),
             pl.col("QUAL").cast(pl.Float64).alias("quality"),
             total_depth_series.alias("total_depth"),

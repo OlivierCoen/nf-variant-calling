@@ -1,6 +1,5 @@
-import dash_bio
 from dash_extensions.enrich import Input, Output, State, Trigger, callback
-
+from src.components.dash_bio.manhattan import ManhattanPlot
 from src.utils.data_management import DataManager
 
 data_manager = DataManager()
@@ -50,7 +49,7 @@ def register_callbacks():
             if df.empty:
                 fig = {}
             else:
-                fig = dash_bio.ManhattanPlot(
+                fig = ManhattanPlot(
                     dataframe=df,
                     **manhattan_plot_kwargs,
                 )
