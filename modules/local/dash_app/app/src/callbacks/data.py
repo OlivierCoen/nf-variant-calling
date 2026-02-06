@@ -24,13 +24,6 @@ manhattan_plot_kwargs = dict(
 
 
 def register_callbacks():
-    @callback(
-        Output("drawer", "opened"),
-        Trigger("settings-button", "n_clicks"),
-        prevent_initial_call=True,
-    )
-    def open_drawer():
-        return True
 
     @callback(
         Output("snp-indel-graph", "figure"),

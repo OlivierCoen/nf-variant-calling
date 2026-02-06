@@ -1,5 +1,4 @@
 import dash_mantine_components as dmc
-
 from src.utils import style
 from src.utils.data_management import DataManager
 
@@ -44,7 +43,7 @@ snp_indel_selection_stack = dmc.Stack(
     gap="xl",
 )
 
-sidebar_stack = dmc.Accordion(
+snp_indel_stack = dmc.Accordion(
     value="filters",
     children=[
         dmc.AccordionItem(
@@ -56,18 +55,5 @@ sidebar_stack = dmc.Accordion(
         )
     ],
     id="sidebar-items",
-    style={"marginTop": "20px", "display": "block"},
-)
-
-drawer = dmc.Drawer(
-    children=[sidebar_stack],
-    id="drawer",
-    opened=False,
-    position="right",
-    withCloseButton=True,
-    closeOnEscape=True,
-    overlayProps=dict(backgroundOpacity=0),
-    trapFocus=False,
-    zIndex=10000,
     style=style.SIDEBAR,
 )
