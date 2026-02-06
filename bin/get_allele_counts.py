@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 import polars as pl
-from polars.datatypes.classes import R
+from common import parse_vcf_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,12 +31,6 @@ def parse_args():
         help="Path to VCF file",
     )
     return parser.parse_args()
-
-
-def parse_vcf_data(vcf_file: Path) -> pl.LazyFrame:
-    return pl.scan_csv(
-        vcf_file, separator="\t", has_header=True, comment_prefix="##"
-    ).rename({"#CHROM": "CHROM"})
 
 
 def get_position_in_format(vcf_lf: pl.LazyFrame, info: str) -> int:

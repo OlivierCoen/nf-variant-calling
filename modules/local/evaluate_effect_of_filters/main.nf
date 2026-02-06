@@ -1,4 +1,4 @@
-process ADDITIONAL_FILTERING {
+process EVALUATE_EFFECT_OF_FILTERS {
 
     tag "${meta.id}"
     label 'process_high'
@@ -9,19 +9,18 @@ process ADDITIONAL_FILTERING {
         'community.wave.seqera.io/library/htslib_matplotlib_polars_python:b8381ca8e371940c' }"
 
     input:
-    tuple val(meta), path(vcf)
-    val(min_depth_quantile)
-    val(max_depth_quantile)
+    tuple val(meta), path(vcf), path(filtered_vcf)
+    tuple val(meta2), path(fai)
 
     output:
-    tuple val(meta), path("${prefix}.vcf.gz"), optional: true,                                                                emit: vcf
+    tuple val(meta), path("${prefix}.png"),                                                                                   emit: png
     tuple val("${task.process}"), val('python'),       eval("python3 --version | sed 's/Python //'"),                         topic: versions
     tuple val("${task.process}"), val('polars'),       eval('python3 -c "import polars; print(polars.__version__)"'),         topic: versions
     tuple val("${task.process}"), val('matplotlib'),   eval('python3 -c "import matplotlib; print(matplotlib.__version__)"'), topic: versions
 
     script:
     def args = task.ext.args ?: ""
-    prefix = task.ext.prefix ?: "${meta.variant_type}.refiltered"
+    prefix = task.ext.prefix ?: "${meta.variant_type}.effect_of_filters_on_variants"
     def is_using_containers = workflow.containerEngine ? true : false
     """
     # limiting number of threads
@@ -29,15 +28,11 @@ process ADDITIONAL_FILTERING {
 
     export MPLCONFIGDIR=\$PWD
 
-    apply_additional_filters.py \\
+    evaluate_effect_of_filters.py \\
         --vcf $vcf \\
-        --out ${prefix}.vcf \\
-        --min-depth-quantile $min_depth_quantile \\
-        --max-depth-quantile $max_depth_quantile
-
-    if [[ -f ${prefix}.vcf ]]; then
-        bgzip ${prefix}.vcf
-    fi
+        --filtered-vcf $filtered_vcf \\
+        --fai $fai \\
+        --out ${prefix}.png
     """
 
 }

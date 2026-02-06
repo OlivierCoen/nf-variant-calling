@@ -129,6 +129,31 @@
                 }
             }
         },
+        "variant_filtering_options": {
+            "title": "Variant filtering options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for variant filtering.",
+            "required": ["input", "outdir"],
+            "properties": {
+                "min_depth_quantile": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 0,
+                    "description": "Minimum quantile for total depth, considering all samples.",
+                    "fa_icon": "fas fa-terminal"
+                },
+                "max_depth_quantile": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 1,
+                    "description": "Maximum quantile for total depth, considering all samples.",
+                    "fa_icon": "fas fa-terminal"
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -280,6 +305,9 @@
         },
         {
             "$ref": "#/$defs/variant_calling_options"
+        },
+        {
+            "$ref": "#/$defs/variant_filtering_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

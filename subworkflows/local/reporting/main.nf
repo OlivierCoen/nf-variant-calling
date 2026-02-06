@@ -1,3 +1,5 @@
+include { EVALUATE_EFFECT_OF_FILTERS             } from '../../../modules/local/evaluate_effect_of_filters'
+include { DASH_APP                               } from '../../../modules/local/dash_app'
 include { MULTIQC                                } from '../../../modules/nf-core/multiqc'
 
 include { methodsDescriptionText                 } from '../utils_nfcore_nf_variant_calling_pipeline'
@@ -11,11 +13,13 @@ include { paramsSummaryMap                       } from 'plugin/nf-schema'
 ========================================================================================
 */
 
-workflow MULTIQC_WORKFLOW {
+workflow REPORTING {
 
     take:
-    ch_multiqc_files
-    ch_versions
+    ch_filtered_vcf_tbi
+    ch_vcf_tbi
+    ch_pvalues
+    ch_genome_fai_dict
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -23,10 +27,40 @@ workflow MULTIQC_WORKFLOW {
 
     main:
 
+    ch_versions = Channel.empty()
+    ch_multiqc_files = Channel.empty()
+
+    // -----------------------------------------------------------------
+    // MAKE SCATTERPLOT OF FILTERED VARIANTS AGAINST VARIANTS
+    // -----------------------------------------------------------------
+
+    ch_input = ch_vcf_tbi
+                 .join( ch_filtered_vcf_tbi )
+                 .map{
+                    meta, vcf, tbi, filtered_vcf, filtered_tbi ->
+                        [ meta, vcf, filtered_vcf ]
+                }
+
+    EVALUATE_EFFECT_OF_FILTERS(
+        ch_input,
+        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, fai ] }.collect()
+    )
+
+    // -----------------------------------------------------------------
+    // DASH APPLICATION
+    // -----------------------------------------------------------------
+
+    DASH_APP(
+        ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> vcf }.collect(),
+        ch_pvalues.map{ meta, file -> file }.collect()
+    )
 
     // ------------------------------------------------------------------------------------
     // VERSIONS
     // ------------------------------------------------------------------------------------
+
+    ch_versions = ch_versions
+                    .mix ( DASH_APP.out.versions )
 
     // Collate and save software versions
     //
@@ -51,7 +85,7 @@ workflow MULTIQC_WORKFLOW {
                             .mix(topic_versions_string)
                             .collectFile(
                                 storeDir: "${outdir}/pipeline_info",
-                                name: 'nf_core_'  +  'stableexpression_software_'  + 'mqc_'  + 'versions.yml',
+                                name: 'nf_core_'  +  'variant_calling_software_'  + 'mqc_'  + 'versions.yml',
                                 sort: true,
                                 newLine: true
                             )

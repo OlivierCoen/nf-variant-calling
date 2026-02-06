@@ -19,10 +19,8 @@ process GET_ALLELE_COUNTS {
     script:
     def is_using_containers = workflow.containerEngine ? true : false
     """
-    # limiting number of threads when using conda / micromamba
-    if [ "${is_using_containers}" == "false" ]; then
-        export POLARS_MAX_THREADS=${task.cpus}
-    fi
+    # limiting number of threads
+    export POLARS_MAX_THREADS=${task.cpus}
 
     get_allele_counts.py \\
         --vcf $vcf

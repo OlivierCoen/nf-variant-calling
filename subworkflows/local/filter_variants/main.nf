@@ -8,7 +8,9 @@ workflow FILTER_VARIANTS {
 
     take:
     ch_variants
-    ch_genome_fai_dict
+    min_depth_quantile
+    max_depth_quantile
+
 
     main:
 
@@ -24,7 +26,8 @@ workflow FILTER_VARIANTS {
 
     ADDITIONAL_FILTERING (
         BASE_FILTERING.out.vcf_tbi.map { meta, vcf, tbi -> [ meta, vcf ] },
-        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, fai ] }.collect()
+        min_depth_quantile,
+        max_depth_quantile
     )
     ch_filtered_vcf = ADDITIONAL_FILTERING.out.vcf
 

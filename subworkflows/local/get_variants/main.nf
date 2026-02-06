@@ -38,7 +38,7 @@ workflow GET_VARIANTS {
                     .map {
                         vcf, tbi ->
                             [ [ id: variant_type ], vcf, tbi ]
-                    }
+                    }.view{ v-> "variant $v"}
 
     // -----------------------------------------------------------------
     // FILTERING

@@ -12,10 +12,7 @@ include { MERGE_VARIANTS                                        } from '../subwo
 include { FILTER_VARIANTS                                       } from '../subworkflows/local/filter_variants'
 include { DESCRIPTIVE_STATISTICS                                } from '../subworkflows/local/descriptive_statistics'
 include { STATISTICAL_TESTS                                     } from '../subworkflows/local/statistical_tests'
-
-include { MULTIQC_WORKFLOW                                      } from '../subworkflows/local/multiqc'
-
-include { DASH_APP                                              } from '../modules/local/dash_app'
+include { REPORTING                                             } from '../subworkflows/local/reporting'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,9 +28,6 @@ workflow VARIANT_CALLING {
     ch_genome
 
     main:
-
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
 
     GENOME_PREPARATION(
         ch_genome,
@@ -82,22 +76,26 @@ workflow VARIANT_CALLING {
 
     MERGE_VARIANTS ( CALL_VARIANTS.out.vcf )
 
+    ch_vcf_tbi = MERGE_VARIANTS.out.vcf_tbi
+
     // -----------------------------------------------------------------
     // FILTERING
     // -----------------------------------------------------------------
 
     FILTER_VARIANTS(
-        MERGE_VARIANTS.out.vcf_tbi,
-        ch_genome_fai_dict
+        ch_vcf_tbi,
+        params.min_depth_quantile,
+        params.max_depth_quantile
     )
-    ch_filtered_variants = FILTER_VARIANTS.out.vcf_tbi
+
+    ch_filtered_vcf_tbi = FILTER_VARIANTS.out.vcf_tbi
 
     // -----------------------------------------------------------------
     // DESCRIPTIVE STATS
     // -----------------------------------------------------------------
 
     DESCRIPTIVE_STATISTICS (
-        ch_filtered_variants,
+        ch_filtered_vcf_tbi,
         ch_genome_fai_dict
     )
 
@@ -106,30 +104,22 @@ workflow VARIANT_CALLING {
     // -----------------------------------------------------------------
 
     STATISTICAL_TESTS (
-        ch_filtered_variants,
+        ch_filtered_vcf_tbi,
         ch_design_file
     )
 
-    // -----------------------------------------------------------------
-    // DASH APPLICATION
-    // -----------------------------------------------------------------
-
-    DASH_APP(
-        ch_filtered_variants.map{ meta, file, index -> file }.collect(),
-        STATISTICAL_TESTS.out.pvalues.map{ meta, file -> file }.collect()
-    )
+    ch_pvalues = STATISTICAL_TESTS.out.pvalues
 
     // -----------------------------------------------------------------
-    // MULTIQC
+    // REPORTING (DASH APP, MULTIQC, ...)
     // -----------------------------------------------------------------
 
-    ch_versions = ch_versions
-                    .mix ( DASH_APP.out.versions )
 
-
-    MULTIQC_WORKFLOW(
-        ch_multiqc_files,
-        ch_versions,
+    REPORTING(
+        ch_filtered_vcf_tbi,
+        ch_vcf_tbi,
+        ch_pvalues,
+        ch_genome_fai_dict,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -138,7 +128,7 @@ workflow VARIANT_CALLING {
 
 
     emit:
-    multiqc_report            = MULTIQC_WORKFLOW.out.report.toList()
+    multiqc_report            = REPORTING.out.report.toList()
 
 }
 

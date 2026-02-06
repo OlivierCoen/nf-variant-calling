@@ -11,12 +11,12 @@ process BCFTOOLS_VIEW {
     tuple val(meta), path(vcf), path(tbi)
 
     output:
-    tuple val(meta), path("${prefix}.vcf.gz"), path("${prefix}.vcf.gz.tbi"), emit: vcf_tbi
+    tuple val(meta), path("${prefix}.vcf.gz"), path("${prefix}.vcf.gz.tbi"),                                                       emit: vcf_tbi
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), topic: versions
 
     script:
     def args = task.ext.args ?: ""
-    prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.variant_type}.filtered"
     """
     bcftools view \\
         --output-type z \\

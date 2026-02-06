@@ -2,16 +2,17 @@
 
 import argparse
 import logging
-import sys
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import polars as pl
-from common import parse_vcf_data, parse_vcf_header
+from common import parse_vcf_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 FIGZISE = (12, 6)
+WINDOW_SIZE = int(1e6)
 
 
 #####################################################
@@ -31,6 +32,13 @@ def parse_args():
         help="Path to VCF file",
     )
     parser.add_argument(
+        "--filtered-vcf",
+        type=Path,
+        dest="filtered_vcf_file",
+        required=True,
+        help="Path to filtered VCF file",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         dest="outfile",
@@ -38,18 +46,11 @@ def parse_args():
         help="Path to output VCF file",
     )
     parser.add_argument(
-        "--min-depth-quantile",
-        dest="min_depth_quantile",
-        type=float,
-        default=0.1,
-        help="Minimum depth quantile",
-    )
-    parser.add_argument(
-        "--max-depth-quantile",
-        dest="max_depth_quantile",
-        type=float,
-        default=0.9,
-        help="Maximum depth quantile",
+        "--fai",
+        type=Path,
+        dest="fai_file",
+        required=True,
+        help="Fai index file of the reference genome",
     )
     return parser.parse_args()
 
@@ -113,6 +114,65 @@ def range_starts(lengths: pl.Series) -> pl.Series:
     ).cum_sum()
 
 
+def get_genome_positions(
+    vcf_file: Path, fai_file: Path, window_size: int
+) -> pl.DataFrame:
+
+    chrom_df = (
+        pl.scan_csv(fai_file, has_header=False, separator="\t")
+        .rename({"column_1": "chrom", "column_2": "len"})
+        .with_columns(pl.col("chrom").str.strip_chars())
+        .select(["chrom", "len"])
+        .collect()
+    )
+
+    scaff_starts = range_starts(chrom_df["len"])
+    chroms_with_starts = chrom_df.with_columns(scaffold_start=scaff_starts)
+
+    vcf_lf = parse_vcf_data(vcf_file)
+
+    return (
+        vcf_lf.select(["CHROM", "POS"])
+        .collect()
+        .join(chroms_with_starts, left_on="CHROM", right_on="chrom", how="left")
+        .with_columns(
+            (pl.col("POS") + pl.col("scaffold_start") - 1).alias("genome_position")
+        )
+        .with_columns(
+            ((pl.col("genome_position") // window_size) * window_size)
+            .cast(pl.Int64)
+            .alias("window")
+        )
+    )
+
+
+def get_nb_snps_per_window(genome_positions: pl.DataFrame):
+    return genome_positions.group_by("window").agg(pl.len().alias("N")).sort("window")
+
+
+def plot_effect_of_filters_on_snps(
+    genome_positions: pl.DataFrame,
+    filtered_genome_positions: pl.DataFrame,
+    outfile: Path,
+):
+    n_snps = get_nb_snps_per_window(genome_positions)
+    n_snps_filtered = get_nb_snps_per_window(filtered_genome_positions)
+
+    n_snps = n_snps.join(
+        n_snps_filtered, on="window", how="left", suffix="_filtered"
+    ).fill_null(0)
+
+    fig, ax = plt.subplots(figsize=FIGZISE)
+    plt.scatter(n_snps["N"], n_snps["N_filtered"])
+    plt.xlabel("SNP count (before filtering)")
+    plt.ylabel("SNP count (after filtering)")
+    plt.title("Effect of filters on SNP density per 1 Mb window")
+
+    plt.savefig(outfile, bbox_inches="tight")
+    # closes current figure window to save memory
+    plt.close()
+
+
 #####################################################
 #####################################################
 # MAIN
@@ -124,37 +184,17 @@ def main():
     args = parse_args()
 
     logger.info("Parsing VCF file")
-    vcf_lf = parse_vcf_data(args.vcf_file)
-    vcf_header_lines = parse_vcf_header(args.vcf_file)
-    nb_original_snps = vcf_lf.select(pl.len()).collect().item()
-
-    if nb_original_snps == 0:
-        logger.info("No SNPs found in VCF file")
-        sys.exit(0)
-
-    logger.info(f"Parsed {nb_original_snps} SNPs")
-
-    logger.info("Separating read count columns")
-
-    filter_mask = get_filter_mask(
-        vcf_lf, args.min_depth_quantile, args.max_depth_quantile
-    )
-    logger.info(
-        f"Kept {filter_mask.sum()} SNPs out of {nb_original_snps} ({filter_mask.sum() / nb_original_snps:.2%})"
+    genome_positions = get_genome_positions(args.vcf_file, args.fai_file, WINDOW_SIZE)
+    filtered_genome_positions = get_genome_positions(
+        args.filtered_vcf_file, args.fai_file, WINDOW_SIZE
     )
 
-    logger.info("Applying filters")
-    vcf_lf = vcf_lf.filter(filter_mask)
+    logger.info("Plotting effect of filters on SNP density")
+    plot_effect_of_filters_on_snps(
+        genome_positions, filtered_genome_positions, args.outfile
+    )
 
-    logger.info(f"Exporting fitlered VCF to {args.outfile}")
-
-    if vcf_lf.select(pl.len()).collect().item() == 0:
-        logger.info("No variants left after filtering")
-        sys.exit(0)
-
-    with open(args.outfile, "a") as fout:
-        fout.writelines(vcf_header_lines)
-        vcf_lf.collect().rename({"CHROM": "#CHROM"}).write_csv(fout, separator="\t")
+    logger.info("Done")
 
 
 if __name__ == "__main__":
