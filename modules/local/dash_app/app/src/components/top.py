@@ -1,6 +1,5 @@
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
 from src.components import graphs
 from src.utils import style
 
@@ -9,7 +8,7 @@ gene_icon = DashIconify(icon="material-symbols:genetics", width=20)
 sample_icon = DashIconify(icon="ic:baseline-dashboard-customize", width=20)
 
 
-variant_tabs = dmc.Tabs(
+tabs = dmc.Tabs(
     children=[
         dmc.TabsList(
             children=[
@@ -33,7 +32,9 @@ variant_tabs = dmc.Tabs(
             style=style.HEADER_TABLIST,
         ),
         dmc.TabsPanel(
-            children=[graphs.snp_indel_graph],
+            children=[
+                graphs.snp_indel_graph,
+            ],
             style=style.TABS_PANEL,
             value="snp_indel",
         ),
@@ -55,4 +56,23 @@ variant_tabs = dmc.Tabs(
     persisted_props=["value"],
     persistence_type="session",
     style=style.TAB,
+)
+
+settings_button = dmc.Button(
+    "Open settings",
+    id="settings-button",
+    className="settings-button",
+    color="teal",
+    style=style.SETTINGS_BUTTON,
+)
+
+header = dmc.Grid(
+    children=[
+        dmc.GridCol(tabs, span=10),
+        dmc.GridCol(
+            settings_button, span=2, style={"textAlign": "right", "marginTop": "20px"}
+        ),
+    ],
+    style={"marginRight": "20px"},
+    # gutter="xl",
 )

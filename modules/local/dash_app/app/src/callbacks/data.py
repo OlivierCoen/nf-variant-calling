@@ -1,4 +1,5 @@
 from dash_extensions.enrich import Input, Output, State, Trigger, callback
+
 from src.components.dash_bio.manhattan import ManhattanPlot
 from src.utils.data_management import DataManager
 
@@ -11,12 +12,6 @@ data_manager = DataManager()
 ##############################################
 
 manhattan_plot_kwargs = dict(
-    chrm="chromosome",
-    bp="position",
-    p="cmh_pvalue",
-    snp="snp",
-    gene="gene",
-    annotation="annotation",
     logp=True,
     suggestiveline_color="#AA00AA",
     genomewideline_color="#AA5500",
@@ -38,7 +33,7 @@ def register_callbacks():
             df = data_manager.get_manhattanplot_data(
                 data_type, quality_range, depth_range
             )
-
+            print(df.columns)
             if df.empty:
                 fig = {}
             else:

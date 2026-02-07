@@ -6,56 +6,33 @@ As of February 2026, Dash Bio has not been updated since 3 years, and there are 
 This code is a modified version of the original code.
 """
 
-from __future__ import absolute_import
-
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from pandas.api.types import is_numeric_dtype
 
 SUGGESTIVE_LINE_LABEL = "suggestive line"
 GENOMEWIDE_LINE_LABEL = "genomewide line"
 
 
-def _get_hover_text(df, snpname=None, genename=None, annotationname=None):
-    """Format the hover text used in Manhattan and Volcano plots.
-    :param (dataFrame) df: A pandas dataframe.
-    :param (string) snpname: A string denoting the column name for the SNP
-    names (e.g., rs number). More generally, this column could be anything
-    that identifies each point being plotted. For example,
-    in an Epigenomewide association study (EWAS), this could be the probe
-    name or cg number. This column should be a character. This argument is
-    optional, however it is necessary to specify it if you want to
-    highlight points on the plot using the highlight argument in the
-    figure method.
-    :param (string) genename: A string denoting the column name for the
-    GENE names.
-    :param (string) annotationname: A string denoting the column name for
-    annotations. This could be any annotation information that you
-    want to include in the plot (e.g., zscore, effect size, minor allele
-    frequency).
-    """
-    hover_text = ""
-    if snpname is not None and snpname in df.columns:
-        hover_text = "SNP: " + df[snpname].astype(str)
-
-    if genename is not None and genename in df.columns:
-        hover_text = hover_text + "<br>GENE: " + df[genename].astype(str)
-
-    if annotationname is not None and annotationname in df.columns:
-        hover_text = hover_text + "<br>" + df[annotationname].astype(str)
-
-    return hover_text
+def _get_hover_text(df: pd.DataFrame):
+    return (
+        "SNP: "
+        + df["snp"].astype(str)
+        + "<br>GENE: "
+        + df["gene"].astype(str)
+        + "<br>P-VALUE: "
+        + df["pvalue"].astype(str)
+        + "<br>QUALITY: "
+        + df["quality"].astype(str)
+        + "<br>TOTAL DEPTH: "
+        + df["total_depth"].astype(str)
+        + "<br>ALLELE COUNTS (R0/A0): "
+        + df["allele_counts"].astype(str)
+    )
 
 
 def ManhattanPlot(
-    dataframe,
-    chrm="CHR",
-    bp="BP",
-    p="P",
-    snp="SNP",
-    gene="GENE",
-    annotation=None,
+    dataframe: pd.DataFrame,
     logp=True,
     title="Manhattan Plot",
     showgrid=True,
@@ -79,35 +56,8 @@ def ManhattanPlot(
     - dataframe (dataframe; required): A pandas dataframe which must contain at
         least the following three columns:
                 - the chromosome number
-                - genomic base-pair position
+                - genomic base-pair corrected_position
                 - a numeric quantity to plot such as a p-value or zscore
-    - chrm (string; default 'CHR'): A string denoting the column name for
-        the chromosome. This column must be float or integer. Minimum
-        number of chromosomes required is 1. If you have X, Y, or MT
-        chromosomes, be sure to renumber these 23, 24, 25, etc.
-    - bp (string; default 'BP'): A string denoting the column name for the
-        chromosomal position.
-    - p (string; default 'P'): A string denoting the column name for the
-        float quantity to be plotted on the y-axis. This column must be
-        numeric. It does not have to be a p-value. It can be any numeric
-        quantity such as peak heights, Bayes factors, test statistics. If
-        it is not a p-value, make sure to set logp = False.
-    - snp (string; default 'SNP'): A string denoting the column name for
-        the SNP names (e.g., rs number). More generally, this column could
-        be anything that identifies each point being plotted. For example,
-        in an Epigenomewide association study (EWAS), this could be the
-        probe name or cg number. This column should be a character. This
-        argument is optional, however it is necessary to specify it if you
-        want to highlight points on the plot, using the highlight argument
-        in the figure method.
-    - gene (string; default 'GENE'): A string denoting the column name for
-        the GENE names. This column could be a string or a float. More
-        generally, it could be any annotation information that you want
-        to include in the plot.
-    - annotation (string; optional): A string denoting the column to use
-        as annotations. This column could be a string or a float. It
-        could be any annotation information that you want to include in
-        the plot (e.g., zscore, effect size, minor allele frequency).
     - logp (bool; optional): If True, the -log10 of the p-value is
         plotted. It isn't very useful to plot raw p-values; however,
         plotting the raw value could be useful for other genome-wide plots
@@ -152,7 +102,7 @@ def ManhattanPlot(
         '''
         dataframe = pd.DataFrame(
             np.random.randint(0,100,size=(100, 3)),
-            columns=['P', 'CHR', 'BP'])
+            columns=['P', 'CHR', '"corrected_position"'])
         fig = create_manhattan(dataframe, title='XYZ Manhattan plot')
 
         plotly.offline.plot(fig, image='png')
@@ -160,16 +110,7 @@ def ManhattanPlot(
 
     """
 
-    mh = _ManhattanPlot(
-        dataframe,
-        chrm=chrm,
-        bp=bp,
-        p=p,
-        snp=snp,
-        gene=gene,
-        annotation=annotation,
-        logp=logp,
-    )
+    mh = _ManhattanPlot(dataframe, logp=logp)
 
     return mh.figure(
         title=title,
@@ -193,13 +134,7 @@ def ManhattanPlot(
 class _ManhattanPlot:
     def __init__(
         self,
-        x,
-        chrm="CHR",
-        bp="BP",
-        p="P",
-        snp="SNP",
-        gene="GENE",
-        annotation=None,
+        df: pd.DataFrame,
         logp=True,
     ):
         """
@@ -207,35 +142,8 @@ class _ManhattanPlot:
         - dataframe (dataframe; required): A pandas dataframe which
         must contain at least the following three columns:
             - the chromosome number
-            - genomic base-pair position
+            - genomic base-pair corrected_position
             - a numeric quantity to plot such as a p-value or zscore
-        - chrm (string; default 'CHR'): A string denoting the column name for the
-        chromosome.  This column must be float or integer.  Minimum number
-        of chromosomes required is 1. If you have X, Y, or MT chromosomes,
-        be sure to renumber these 23, 24, 25, etc.
-        - bp (string; default 'BP'): A string denoting the column name for the
-        chromosomal position.
-        - p (string; default 'P'): A string denoting the column name for the
-        float quantity to be plotted on the y-axis. This column must be
-        numeric. This does not have to be a p-value. It can be any
-        numeric quantity such as peak heights, bayes factors, test
-        statistics. If it is not a p-value, make sure to set logp = FALSE.
-        - snp (string; default 'SNP'): A string denoting the column name for the
-        SNP names (e.g. rs number). More generally, this column could be
-        anything that identifies each point being plotted. For example, in
-        an Epigenomewide association study (EWAS) this could be the probe
-        name or cg number. This column should be a character. This
-        argument is optional, however it is necessary to specify if you
-        want to highlight points on the plot using the highlight argument
-        in the figure method.
-        - gene (string; default 'GENE'): A string denoting the column name for the
-        GENE names. This column could be a string or a float. More
-        generally, it could be any annotation information that you want
-        to include in the plot.
-        - annotation (string; optional): A string denoting the column name for
-        an annotation. This column could be a string or a float.  This
-        could be any annotation information that you want to include in
-        the plot (e.g. zscore, effect size, minor allele frequency).
         - logp (bool; default True): If True, the -log10 of the p-value is
         plotted.  It isn't very useful to plot raw p-values; however,
         plotting the raw value could be useful for other genome-wide plots
@@ -245,94 +153,18 @@ class _ManhattanPlot:
         Returns:
         - A ManhattanPlot object."""
 
-        # checking the validity of the arguments
-
-        # Make sure you have chrm, bp and p columns and that they are of
-        # numeric type
-        if chrm not in x.columns.values:
-            raise KeyError("Column %s not found in 'x' data.frame" % chrm)
-
-        if bp not in x.columns.values:
-            raise KeyError("Column %s not found in 'x' data.frame" % bp)
-        else:
-            if not is_numeric_dtype(x[bp].dtype):
-                raise TypeError("%s column should be numeric type" % bp)
-
-        if p not in x.columns.values:
-            raise KeyError("Column %s not found in 'x' data.frame" % p)
-        else:
-            if not is_numeric_dtype(x[p].dtype):
-                raise TypeError("%s column should be numeric type" % p)
-
-        # Create a new DataFrame with columns named after chrm, bp, and p.
-        self.data = pd.DataFrame(data=x[[chrm, bp, p]])
-
-        if snp is not None:
-            if snp not in x.columns.values:
-                # Warn if you don't have a snp column
-                raise KeyError(
-                    "snp argument specified as %s but column not found in "
-                    "'x' data.frame" % snp
-                )
-            else:
-                # If the input DataFrame has a snp column, add it to the new
-                # DataFrame
-                self.data[snp] = x[snp]
-
-        if gene is not None:
-            if gene not in x.columns.values:
-                # Warn if you don't have a gene column
-                raise KeyError(
-                    "gene argument specified as %s but column not found in "
-                    "'x' data.frame" % gene
-                )
-            else:
-                # If the input DataFrame has a gene column, add it to the new
-                # DataFrame
-                self.data[gene] = x[gene]
-
-        if annotation is not None:
-            if annotation not in x.columns.values:
-                # Warn if you don't have an annotation column
-                raise KeyError(
-                    "annotation argument specified as %s but column not "
-                    "found in 'x' data.frame" % annotation
-                )
-            else:
-                # If the input DataFrame has a gene column, add it to the new
-                # DataFrame
-                self.data[annotation] = x[annotation]
-
+        self.data = df
         self.xlabel = ""
         self.ticks = []
         self.ticksLabels = []
-        self.nChr = len(x[chrm].unique())
-        self.chrName = chrm
-        self.pName = p
-        self.snpName = snp
-        self.geneName = gene
-        self.annotationName = annotation
+        self.nChr = len(df["chromosome"].unique())
         self.logp = logp
-
-        # Set positions, ticks, and labels for plotting
-
-        self.index = "INDEX"
-        self.pos = "POSITION"
-
-        # Fixes the bug where one chromosome is missing by adding a sequential
-        # index column.
-        idx = 0
-        for i in self.data[chrm].unique():
-            idx = idx + 1
-            self.data.loc[self.data[chrm] == i, self.index] = int(idx)
-        # Set the type to be the same as provided for chrm column
-        self.data[self.index] = self.data[self.index].astype(self.data[chrm].dtype)
 
         # This section sets up positions and ticks. Ticks should be placed in
         # the middle of a chromosome. The new pos column is added that keeps
-        # a running sum of the positions of each successive chromosome.
+        # a running sum of the corrected_positions of each successive chromosome.
         # For example:
-        # chrm bp pos
+        # chrm "corrected_position" pos
         # 1   1  1
         # 1   2  2
         # 2   1  3
@@ -341,44 +173,69 @@ class _ManhattanPlot:
 
         if self.nChr == 1:
             # For a single chromosome
-            self.data[self.pos] = self.data[bp]
-            self.ticks.append(int(len(self.data[self.pos]) / 2.0) + 1)
-            self.xlabel = "Chromosome %s position" % (self.data[chrm].unique())
+            self.data["corrected_position"] = self.data["position"]
+            self.ticks.append(int(len(self.data["corrected_position"]) / 2.0) + 1)
+            self.xlabel = f"Position in {self.data['chromosome'].unique()[0]}"
             self.ticksLabels = self.ticks
         else:
             # For multiple chromosomes
             lastbase = 0
-            for i in self.data[self.index].unique():
+            previous_chrom = None
+            for i, chrom in enumerate(self.data["chromosome"].unique()):
                 if i == 1:
-                    self.data.loc[self.data[self.index] == i, self.pos] = self.data.loc[
-                        self.data[self.index] == i, bp
+                    self.data.loc[
+                        self.data["chromosome"] == chrom, "corrected_position"
+                    ] = self.data.loc[
+                        self.data["chromosome"] == chrom, "corrected_position"
                     ].values
-                else:
-                    prevbp = self.data.loc[self.data[self.index] == i - 1, bp]
-                    # Shift the basepair position by the largest bp of the
-                    # current chromosome
-                    lastbase = lastbase + prevbp.iat[-1]
 
-                    self.data.loc[self.data[self.index] == i, self.pos] = (
-                        self.data.loc[self.data[self.index] == i, bp].values + lastbase
+                    previous_chrom = chrom
+
+                else:
+                    previous_corrected_position = self.data.loc[
+                        self.data["chromosome"] == previous_chrom, "corrected_position"
+                    ]
+                    # Shift the basepair corrected_position by the largest "corrected_position" of the
+                    # current chromosome
+                    lastbase = lastbase + previous_corrected_position.iat[-1]
+
+                    self.data.loc[
+                        self.data["chromosome"] == chrom, "corrected_position"
+                    ] = (
+                        self.data.loc[
+                            self.data["chromosome"] == chrom, "corrected_position"
+                        ].values
+                        + lastbase
                     )
 
-                tmin = min(self.data.loc[self.data[self.index] == i, self.pos])
-                tmax = max(self.data.loc[self.data[self.index] == i, self.pos])
+                tmin = min(
+                    self.data.loc[
+                        self.data["chromosome"] == chrom, "corrected_position"
+                    ]
+                )
+                tmax = max(
+                    self.data.loc[
+                        self.data["chromosome"] == chrom, "corrected_position"
+                    ]
+                )
                 self.ticks.append(int((tmin + tmax) / 2.0) + 1)
 
+                previous_chrom = chrom
+
             self.xlabel = "Chromosome"
-            self.data[self.pos] = self.data[self.pos].astype(self.data[bp].dtype)
+            self.data["corrected_position"] = self.data["corrected_position"].astype(
+                self.data["corrected_position"].dtype
+            )
 
             if self.nChr > 10:  # To avoid crowded labels
                 self.ticksLabels = [
                     t
                     if np.mod(int(t), 2)  # Only every two ticks
                     else ""
-                    for t in self.data[chrm].unique()
+                    for t in self.data["chromosome"].unique()
                 ]
             else:
-                self.ticksLabels = self.data[chrm].unique()  # All the ticks
+                self.ticksLabels = self.data["chromosome"].unique()  # All the ticks
 
     def figure(
         self,
@@ -440,8 +297,8 @@ class _ManhattanPlot:
 
         """
 
-        xmin = min(self.data[self.pos].values)
-        xmax = max(self.data[self.pos].values)
+        xmin = min(self.data["corrected_position"].values)
+        xmax = max(self.data["corrected_position"].values)
 
         horizontallines = []
 
@@ -480,10 +337,10 @@ class _ManhattanPlot:
 
         if highlight:
             if not isinstance(highlight, bool):
-                if self.snpName not in self.data.columns.values:
+                if "snp" not in self.data.columns.values:
                     raise KeyError(
                         "snp argument specified for highlight as %s but "
-                        "column not found in the data.frame" % self.snpName
+                        "column not found in the data.frame" % "snp"
                     )
             else:
                 if not genomewideline_value:
@@ -497,24 +354,23 @@ class _ManhattanPlot:
                 # Sort the p-values (or -log10(p-values) above the line
                 if genomewideline_value:
                     if self.logp:
-                        tmp = tmp.loc[-np.log10(tmp[self.pName]) > genomewideline_value]
+                        tmp = tmp.loc[-np.log10(tmp["pvalue"]) > genomewideline_value]
                     else:
-                        tmp = tmp.loc[tmp[self.pName] > genomewideline_value]
+                        tmp = tmp.loc[tmp["pvalue"] > genomewideline_value]
 
-                highlight_hover_text = _get_hover_text(
-                    tmp,
-                    snpname=self.snpName,
-                    genename=self.geneName,
-                    annotationname=self.annotationName,
+                highlight_hover_text = _get_hover_text(tmp)
+
+                y_values = (
+                    -np.log10(tmp["pvalue"].values)
+                    if self.logp
+                    else tmp["pvalue"].values
                 )
 
                 if not tmp.empty:
                     data_to_plot.append(
                         go.Scattergl(
-                            x=tmp[self.pos].values,
-                            y=-np.log10(tmp[self.pName].values)
-                            if self.logp
-                            else tmp[self.pName].values,
+                            x=tmp["corrected_position"].values,
+                            y=y_values,
                             mode="markers",
                             text=highlight_hover_text,
                             marker=dict(color=highlight_color, size=point_size),
@@ -544,21 +400,18 @@ class _ManhattanPlot:
                 hovermode="closest",
             )
 
-            hover_text = _get_hover_text(
-                data,
-                snpname=self.snpName,
-                genename=self.geneName,
-                annotationname=self.annotationName,
-            )
+            hover_text = _get_hover_text(data)
 
-            chromosome_name = str(data[self.chrName].unique()[0])
+            chromosome_name = str(data["chromosome"].unique()[0])
+
+            y_values = (
+                -np.log10(data["pvalue"].values) if self.logp else data["pvalue"].values
+            )
 
             data_to_plot.append(
                 go.Scattergl(
-                    x=data[self.pos].values,
-                    y=-np.log10(data[self.pName].values)
-                    if self.logp
-                    else data[self.pName].values,
+                    x=data["corrected_position"].values,
+                    y=y_values,
                     mode="markers",
                     showlegend=showlegend,
                     name=chromosome_name,
@@ -587,24 +440,23 @@ class _ManhattanPlot:
             if col is None:
                 col = ["black" if np.mod(i, 2) else "grey" for i in range(self.nChr)]
 
-            for i in data[self.index].unique():
-                tmp = data[data[self.index] == i]
+            for chrom in data["chromosome"].unique():
+                tmp = data[data["chromosome"] == chrom]
 
-                chromosome_name = str(data[self.chrName].unique()[0])
+                chromosome_name = str(data["chromosome"].unique()[0])
 
-                hover_text = _get_hover_text(
-                    tmp,
-                    snpname=self.snpName,
-                    genename=self.geneName,
-                    annotationname=self.annotationName,
+                hover_text = _get_hover_text(tmp)
+
+                y_values = (
+                    np.log10(tmp["pvalue"].values)
+                    if self.logp
+                    else tmp["pvalue"].values
                 )
 
                 data_to_plot.append(
                     go.Scattergl(
-                        x=tmp[self.pos].values,
-                        y=-np.log10(tmp[self.pName].values)
-                        if self.logp
-                        else tmp[self.pName].values,
+                        x=tmp["corrected_position"].values,
+                        y=-y_values,
                         mode="markers",
                         showlegend=showlegend,
                         name=chromosome_name,

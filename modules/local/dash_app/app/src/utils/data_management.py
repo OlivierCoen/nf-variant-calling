@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import polars as pl
+
 from src.utils import config
 
 logging.basicConfig(
@@ -85,7 +86,7 @@ class DataManager:
         return count_df.select(pl.col(col) for col in sample_cols)
 
     @staticmethod
-    def get_annotation(vcf_lf: pl.LazyFrame) -> pl.Series:
+    def get_allele_counts(vcf_lf: pl.LazyFrame) -> pl.Series:
         RO_df = DataManager.extract_counts(vcf_lf, "RO")
         AO_df = DataManager.extract_counts(vcf_lf, "AO")
         df = RO_df + "/" + AO_df
@@ -138,7 +139,7 @@ class DataManager:
         if vcf_lf is None:
             return None
 
-        annot_series = DataManager.get_annotation(vcf_lf)
+        allele_count_series = DataManager.get_allele_counts(vcf_lf)
         total_depth_series = DataManager.extract_total_depth(vcf_lf)
 
         return vcf_lf.select(
@@ -148,9 +149,9 @@ class DataManager:
             total_depth_series.alias("total_depth"),
             (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("snp"),
             (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("gene"),
-            pl.Series(pvalues).cast(pl.Float64).alias("cmh_pvalue"),
-            annot_series.cast(pl.String).alias("annotation"),
-        ).filter(pl.col("cmh_pvalue").is_not_null())
+            pl.Series(pvalues).cast(pl.Float64).alias("pvalue"),
+            allele_count_series.cast(pl.String).alias("allele_counts"),
+        ).filter(pl.col("pvalue").is_not_null())
 
     def get_manhattanplot_data(
         self, data_type: str, quality_range: list[int], depth_range: list[int]

@@ -6,6 +6,8 @@ LAYOUT = {
     "height": "100%",
 }
 
+SIDEBAR_WIDTH = "15em"
+
 HEADER_HEIGHT = "5em"
 
 TAB = {
@@ -13,7 +15,7 @@ TAB = {
     "top": 0,
     "left": 10,
     "right": 0,
-    "width": "100%",
+    "width": f"calc(100% - {SIDEBAR_WIDTH}",
     "height": "100%",
     #'zIndex': '1001',
 }
@@ -44,12 +46,12 @@ SETTINGS_BUTTON = {
     "right": "20px",
 }
 
-SIDEBAR_WIDTH = "15em"
 
 SIDEBAR = {
     "position": "fixed",
     "top": HEADER_HEIGHT,
     "bottom": 0,
+    "right": 5,
     "width": SIDEBAR_WIDTH,
     "height": "100vh",
     "alignItems": "center",

@@ -8,6 +8,7 @@ from dash_extensions.enrich import (
     html,
 )
 from dash_extensions.logging import NotificationsLogHandler
+
 from src.callbacks import data
 from src.components import right_sidebar, stores, tabs, tooltips
 from src.utils import config, style
@@ -42,8 +43,8 @@ def serve_layout():
         children=[
             html.Div(
                 [
-                    tabs.header,
-                    right_sidebar.stack,
+                    right_sidebar.options,
+                    tabs.variant_tabs,
                     *stores.stores_to_load,
                     *tooltips.tooltips_to_load,
                 ]
