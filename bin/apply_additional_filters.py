@@ -11,8 +11,6 @@ from common import parse_vcf_data, parse_vcf_header
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-FIGZISE = (12, 6)
-
 
 #####################################################
 #####################################################

@@ -18,23 +18,18 @@ process DASH_APP {
     }
 
     input:
-    path(vcfs)
-    path(pvalues)
+    path(files)
 
     output:
     path("*"), emit: app
     path "versions.yml", emit: versions
 
     script:
-    def is_using_containers = workflow.containerEngine ? true : false
     """
-    # limiting number of threads when using conda / micromamba
-    if [ "${is_using_containers}" == "false" ]; then
-        export POLARS_MAX_THREADS=${task.cpus}
-    fi
+    export POLARS_MAX_THREADS=${task.cpus}
 
     mkdir -p data
-    mv ${vcfs} ${pvalues} data/
+    mv ${files} data/
     cp -r ${moduleDir}/app/* .
 
     # as of Nextflow version 25.04.8, having these versions sent to the versions topic channel

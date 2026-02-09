@@ -1,5 +1,6 @@
 include { EVALUATE_EFFECT_OF_FILTERS             } from '../../../modules/local/evaluate_effect_of_filters'
 include { DASH_APP                               } from '../../../modules/local/dash_app'
+include { MAKE_SLIDING_WINDOWS                   } from '../../../modules/local/make_sliding_windows'
 include { MULTIQC                                } from '../../../modules/nf-core/multiqc'
 
 include { methodsDescriptionText                 } from '../utils_nfcore_nf_variant_calling_pipeline'
@@ -20,6 +21,7 @@ workflow REPORTING {
     ch_vcf_tbi
     ch_pvalues
     ch_genome_fai_dict
+    window_size
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -47,12 +49,21 @@ workflow REPORTING {
     )
 
     // -----------------------------------------------------------------
+    // MAKE SCATTERPLOT OF FILTERED VARIANTS AGAINST VARIANTS
+    // -----------------------------------------------------------------
+
+    MAKE_SLIDING_WINDOWS(
+        ch_filtered_vcf_tbi.join( ch_pvalues ),
+        window_size
+
+    )
+
+    // -----------------------------------------------------------------
     // DASH APPLICATION
     // -----------------------------------------------------------------
 
     DASH_APP(
-        ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> vcf }.collect(),
-        ch_pvalues.map{ meta, file -> file }.collect()
+        MAKE_SLIDING_WINDOWS.out.grouped_variants.map{ meta, file -> file }.collect()
     )
 
     // ------------------------------------------------------------------------------------

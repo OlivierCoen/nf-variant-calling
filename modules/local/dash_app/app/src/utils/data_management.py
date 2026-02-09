@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pandas as pd
 import polars as pl
-
 from src.utils import config
 
 logging.basicConfig(
@@ -54,7 +53,7 @@ class DataManager:
             return None
         pvalues = []
         with open(cmh_pvalues_file, "r") as fin:
-            for line in fin.readlines():
+            for line in fin:
                 val = line.strip()
                 if val == "NA":
                     pvalues.append(None)

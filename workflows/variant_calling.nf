@@ -120,6 +120,7 @@ workflow VARIANT_CALLING {
         ch_vcf_tbi,
         ch_pvalues,
         ch_genome_fai_dict,
+        params.window_size,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

@@ -57,7 +57,6 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Options for reads preparation.",
-            "required": ["input", "outdir"],
             "properties": {
                 "skip_fastqc": {
                     "type": "boolean",
@@ -80,7 +79,6 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Options for mapping and marking duplicates.",
-            "required": ["input", "outdir"],
             "properties": {
                 "markdup_method": {
                     "type": "string",
@@ -97,7 +95,6 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Options for variant calling.",
-            "required": ["input", "outdir"],
             "properties": {
                 "skip_call_snps_indels": {
                     "type": "boolean",
@@ -134,7 +131,6 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Options for variant filtering.",
-            "required": ["input", "outdir"],
             "properties": {
                 "min_depth_quantile": {
                     "type": "number",
@@ -150,6 +146,21 @@
                     "maximum": 1,
                     "default": 1,
                     "description": "Maximum quantile for total depth, considering all samples.",
+                    "fa_icon": "fas fa-terminal"
+                }
+            }
+        },
+        "reporting_options": {
+            "title": "Reporting options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for reporting.",
+            "properties": {
+                "window_size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 2e4,
+                    "description": "Size of window for grouping variants",
                     "fa_icon": "fas fa-terminal"
                 }
             }
@@ -308,6 +319,9 @@
         },
         {
             "$ref": "#/$defs/variant_filtering_options"
+        },
+        {
+            "$ref": "#/$defs/reporting_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

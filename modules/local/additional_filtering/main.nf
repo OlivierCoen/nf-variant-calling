@@ -20,9 +20,7 @@ process ADDITIONAL_FILTERING {
     tuple val("${task.process}"), val('matplotlib'),   eval('python3 -c "import matplotlib; print(matplotlib.__version__)"'), topic: versions
 
     script:
-    def args = task.ext.args ?: ""
     prefix = task.ext.prefix ?: "${meta.variant_type}.refiltered"
-    def is_using_containers = workflow.containerEngine ? true : false
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}
