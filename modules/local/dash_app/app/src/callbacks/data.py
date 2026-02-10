@@ -1,5 +1,4 @@
 from dash_extensions.enrich import Input, Output, State, Trigger, callback
-
 from src.components.dash_bio.manhattan import ManhattanPlot
 from src.utils.data_management import DataManager
 
@@ -25,15 +24,17 @@ def register_callbacks():
         Output("sv-graph", "figure"),
         Input("snp-indel-range-quality", "value"),
         Input("snp-indel-range-depth", "value"),
+        Input("snp-indel-nb-chromosomes", "value"),
     )
-    def update_graph_data(quality_range: list[int], depth_range: list[int]):
+    def update_graph_data(
+        quality_range: list[int], depth_range: list[int], nb_chromosomes: int
+    ):
         figures = {}
 
         for data_type in ["snp_indel", "sv"]:
             df = data_manager.get_manhattanplot_data(
-                data_type, quality_range, depth_range
+                data_type, quality_range, depth_range, nb_chromosomes
             )
-            print(df.columns)
             if df.empty:
                 fig = {}
             else:

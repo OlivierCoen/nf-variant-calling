@@ -4,8 +4,10 @@
 
 suppressPackageStartupMessages(library("optparse"))
 suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("arrow"))
 library(optparse)
 library(dplyr)
+library(arrow)
 
 
 options(error = traceback)
@@ -41,6 +43,11 @@ get_sample_lists <- function(design) {
 
   sample_lists <- grouped_design$samples
   return(sample_lists)
+}
+
+
+cast_to_numeric <- function(df){
+  return(df %>% mutate(across(everything(), as.numeric)))
 }
 
 
@@ -88,12 +95,11 @@ main <- function() {
 
     args <- get_args()
 
-    RO <- read.csv(args$RO_file)
-    AO <- read.csv(args$AO_file)
+    RO <- arrow::read_parquet(args$RO_file, as_tibble=FALSE)
+    AO <- arrow::read_parquet(args$AO_file, as_tibble=FALSE)
     design <- read.csv(args$design_file)
 
     sample_lists <- get_sample_lists(design)
-
     if (length(sample_lists) != 2) {
         message("Exactly two phenotypes needed here!")
         quit(save = "no", status = 1)
@@ -105,11 +111,14 @@ main <- function() {
     message("Samples for phenotype 1: ", paste(samples_pheno_1, collapse = ", "))
     message("Samples for phenotype 2: ", paste(samples_pheno_2, collapse = ", "))
 
+    RO <- cast_to_numeric(RO)
+    AO <- cast_to_numeric(AO)
+
     p_values <- get_cmh_pval(
-      R0 = RO[,cbind(samples_pheno_1)],
-      R1 = RO[,cbind(samples_pheno_2)],
-      A0 = AO[,cbind(samples_pheno_1)],
-      A1 = AO[,cbind(samples_pheno_2)],
+      R0 = RO[,samples_pheno_1],
+      R1 = RO[,samples_pheno_2],
+      A0 = AO[,samples_pheno_1],
+      A1 = AO[,samples_pheno_2],
       correct = TRUE
     )
 

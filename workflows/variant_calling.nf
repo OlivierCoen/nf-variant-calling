@@ -11,7 +11,7 @@ include { CALL_VARIANTS                                         } from '../subwo
 include { MERGE_VARIANTS                                        } from '../subworkflows/local/merge_variants'
 include { FILTER_VARIANTS                                       } from '../subworkflows/local/filter_variants'
 include { DESCRIPTIVE_STATISTICS                                } from '../subworkflows/local/descriptive_statistics'
-include { STATISTICAL_TESTS                                     } from '../subworkflows/local/statistical_tests'
+include { VARIANT_ANALYSIS                                      } from '../subworkflows/local/variant_analysis'
 include { REPORTING                                             } from '../subworkflows/local/reporting'
 
 /*
@@ -103,12 +103,13 @@ workflow VARIANT_CALLING {
     // STATISTICAL TESTS
     // -----------------------------------------------------------------
 
-    STATISTICAL_TESTS (
-        ch_filtered_vcf_tbi,
-        ch_design_file
+    VARIANT_ANALYSIS (
+        ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> [ meta, vcf ] },
+        ch_design_file,
+        params.window_size
     )
 
-    ch_pvalues = STATISTICAL_TESTS.out.pvalues
+    ch_grouped_variants = VARIANT_ANALYSIS.out.grouped_variants
 
     // -----------------------------------------------------------------
     // REPORTING (DASH APP, MULTIQC, ...)
@@ -118,9 +119,8 @@ workflow VARIANT_CALLING {
     REPORTING(
         ch_filtered_vcf_tbi,
         ch_vcf_tbi,
-        ch_pvalues,
+        ch_grouped_variants,
         ch_genome_fai_dict,
-        params.window_size,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

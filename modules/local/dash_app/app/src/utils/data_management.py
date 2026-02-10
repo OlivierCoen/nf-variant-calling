@@ -15,108 +15,29 @@ logger = logging.getLogger(__name__)
 @lru_cache(maxsize=None)
 class DataManager:
     def __init__(self):
-
         folder = Path(config.DATA_FOLDER)
-        # parse initial data
-        raw_data = dict(
-            snp_indel=dict(
-                variants=self.parse_vcf_data(folder / config.SNP_INDEL["vcf_file"]),
-                pvalues=self.parse_pvalues(folder / config.SNP_INDEL["pvalues_file"]),
-            ),
-            sv=dict(
-                variants=self.parse_vcf_data(folder / config.SV["vcf_file"]),
-                pvalues=self.parse_pvalues(folder / config.SV["pvalues_file"]),
-            ),
-        )
         # compute other static values
         self.variants = {}
-        for key in raw_data:
-            logger.info(f"Preparing {key} data")
-            self.variants[key] = self.prepare_data(
-                raw_data[key]["variants"], raw_data[key]["pvalues"]
-            )
-            logger.info(f"{key} data loaded")
+        self.sorted_chromosomes = {}
+        for variant_type in config.VARIANT_TYPES:
+            logger.info(f"Preparing {variant_type} data")
+
+            variant_file = folder / f"{variant_type}.grouped_variants.parquet"
+
+            self.variants[variant_type] = self.prepare_data(variant_file)
+            logger.info(f"{variant_type} data loaded")
 
     @staticmethod
-    def parse_vcf_data(vcf_file: Path) -> pl.LazyFrame | None:
-        logger.info(f"Parsing {vcf_file} VCF file")
+    def parse_variant_data(vcf_file: Path) -> pl.LazyFrame | None:
+        logger.info(f"Parsing {vcf_file} file")
         if not Path(vcf_file).is_file():
             return None
-        return pl.scan_csv(
-            vcf_file, separator="\t", has_header=True, comment_prefix="##"
-        ).rename({"#CHROM": "CHROM"})
-
-    @staticmethod
-    def parse_pvalues(cmh_pvalues_file: Path) -> list[float | None] | None:
-        logger.info(f"Parsing p-values from {cmh_pvalues_file}")
-        if not Path(cmh_pvalues_file).is_file():
-            return None
-        pvalues = []
-        with open(cmh_pvalues_file, "r") as fin:
-            for line in fin:
-                val = line.strip()
-                if val == "NA":
-                    pvalues.append(None)
-                else:
-                    pvalues.append(float(val))
-        return pvalues
-
-    @staticmethod
-    def get_position_in_format(vcf_lf: pl.LazyFrame, count_type: str) -> int:
-        fmt_series = vcf_lf.select("FORMAT").collect().to_series()
-        if fmt_series.unique().len() > 1:
-            raise ValueError(f"More than one format found: {fmt_series.unique()}")
-        fmt = fmt_series.unique().item()
-        return fmt.split(":").index(count_type)
-
-    @staticmethod
-    def extract_counts(vcf_lf: pl.LazyFrame, count_type: str) -> pl.DataFrame:
-        sample_cols = vcf_lf.collect_schema().names()[9:]
-        count_type_position = DataManager.get_position_in_format(vcf_lf, count_type)
-
-        count_df = vcf_lf.select(
-            pl.col(sample_cols)
-            .str.split(":")
-            .list[count_type_position]
-            .replace(".", None)
-            .cast(pl.String())
-        ).collect()
-
-        return count_df.select(pl.col(col) for col in sample_cols)
-
-    @staticmethod
-    def get_allele_counts(vcf_lf: pl.LazyFrame) -> pl.Series:
-        RO_df = DataManager.extract_counts(vcf_lf, "RO")
-        AO_df = DataManager.extract_counts(vcf_lf, "AO")
-        df = RO_df + "/" + AO_df
-        for col in df.columns:
-            df = df.with_columns(
-                pl.when(pl.col(col).is_not_null())
-                .then(pl.lit(col) + ": " + pl.col(col))
-                .otherwise(pl.col(col))
-                .alias(col)
-            )
-        return df.select(
-            pl.concat_str(pl.all(), separator="\n", ignore_nulls=True)
-        ).to_series()
-
-    @staticmethod
-    def extract_total_depth(vcf_lf: pl.LazyFrame) -> pl.Series:
-        return (
-            vcf_lf.select(
-                pl.col("INFO")
-                .str.extract(r"DP=(\d+)")
-                .cast(pl.Int64)
-                .alias("total_depth")
-            )
-            .collect()
-            .to_series()
-        )
+        return pl.scan_parquet(vcf_file)
 
     def get_max(self, value: str, variant_type: str) -> int:
         return (
             self.variants[variant_type]
-            .select(pl.col(value).max().alias("max_val"))
+            .select(pl.col(value).cast(pl.Int64).max().alias("max_val"))
             .collect()
             .to_series()
             .item(0)
@@ -125,40 +46,77 @@ class DataManager:
     def get_min(self, value: str, variant_type: str) -> int:
         return (
             self.variants[variant_type]
-            .select(pl.col(value).min().alias("min_val"))
+            .select(pl.col(value).cast(pl.Int64).min().alias("min_val"))
             .collect()
             .to_series()
             .item(0)
         )
 
+    def get_chromosomes(self, variant_type: str):
+        return (
+            self.variants[variant_type]
+            .select(pl.col("chromosome").unique())
+            .collect()
+            .to_series()
+            .to_list()
+        )
+
+    def get_sorted_chromosomes(self, variant_type: str):
+        return (
+            self.variants[variant_type]
+            .group_by("chromosome")
+            .agg(pl.col("position").max().alias("max_pos"))
+            .sort("max_pos", descending=True)
+        )
+
     @staticmethod
-    def prepare_data(
-        vcf_lf: pl.LazyFrame | None, pvalues: list[float | None]
-    ) -> pl.LazyFrame | None:
-        if vcf_lf is None:
+    def prepare_data(variant_file: Path) -> pl.LazyFrame | None:
+
+        lf = DataManager.parse_variant_data(variant_file)
+
+        if lf is None:
             return None
 
-        allele_count_series = DataManager.get_allele_counts(vcf_lf)
-        total_depth_series = DataManager.extract_total_depth(vcf_lf)
-
-        return vcf_lf.select(
-            pl.col("CHROM").alias("chromosome"),
-            pl.col("POS").cast(pl.Int64).alias("position"),
-            pl.col("QUAL").cast(pl.Float64).alias("quality"),
-            total_depth_series.alias("total_depth"),
-            (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("snp"),
-            (pl.col("CHROM") + "_" + pl.col("POS").cast(pl.String)).alias("gene"),
-            pl.Series(pvalues).cast(pl.Float64).alias("pvalue"),
-            allele_count_series.cast(pl.String).alias("allele_counts"),
-        ).filter(pl.col("pvalue").is_not_null())
+        return lf.select(
+            pl.col(
+                [
+                    "chromosome",
+                    "position",
+                    "pvalue",
+                    "quality",
+                    "total_depth",
+                    "allele_counts",
+                ]
+            ),
+            (pl.col("chromosome") + "_" + pl.col("position").cast(pl.String)).alias(
+                "snp"
+            ),
+            (pl.col("chromosome") + "_" + pl.col("position").cast(pl.String)).alias(
+                "gene"
+            ),
+        )
 
     def get_manhattanplot_data(
-        self, data_type: str, quality_range: list[int], depth_range: list[int]
+        self,
+        data_type: str,
+        quality_range: list[int],
+        depth_range: list[int],
+        nb_chromosomes: int,
     ) -> pd.DataFrame:
         if self.variants[data_type] is None:
             return pd.DataFrame()
+
+        chromosomes = (
+            self.get_sorted_chromosomes(data_type)
+            .head(nb_chromosomes)
+            .select("chromosome")
+            .collect()
+            .to_series()
+            .to_list()
+        )
         return (
             self.variants[data_type]
+            .filter(pl.col("chromosome").is_in(chromosomes))
             .filter(pl.col("quality").is_between(quality_range[0], quality_range[1]))
             .filter(pl.col("total_depth").is_between(depth_range[0], depth_range[1]))
             .collect()

@@ -9,13 +9,7 @@ UPDATE_TITLE = "Updating ..."
 
 DATA_FOLDER = "data"
 
-SNP_INDEL = {
-    "vcf_file": "snp_indel.filtered.vcf.gz",
-    "pvalues_file": "snp_indel.cmh_pvalues.txt",
-}
-
-
-SV = {"vcf_file": "sv.filtered.vcf.gz", "pvalues_file": "sv.cmh_pvalues.txt"}
+VARIANT_TYPES = ["snp_indel", "sv"]
 
 
 AG_GRID_DEFAULT_COLUMN_DEF = {

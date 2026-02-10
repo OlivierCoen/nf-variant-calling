@@ -10,9 +10,11 @@ from common import parse_vcf_data
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-RO_OUTFILE = "RO_counts.csv"
-AO_OUTFILE = "AO_counts.csv"
+RO_OUTFILE = "RO_counts.parquet"
+AO_OUTFILE = "AO_counts.parquet"
+VARIANTS_OUTFILE = "variants.parquet"
 
+VCF_COLUMNS_TO_KEEP = ["CHROM", "POS", "REF", "ALT", "QUAL", "INFO"]
 
 #####################################################
 #####################################################
@@ -70,8 +72,10 @@ def main():
     RO_lf = extract_counts(vcf_lf, sample_cols, RO_index)
     AO_lf = extract_counts(vcf_lf, sample_cols, AO_index)
 
-    RO_lf.collect().write_csv(RO_OUTFILE)
-    AO_lf.collect().write_csv(AO_OUTFILE)
+    RO_lf.sink_parquet(RO_OUTFILE)
+    AO_lf.sink_parquet(AO_OUTFILE)
+
+    vcf_lf.select(VCF_COLUMNS_TO_KEEP).sink_parquet(VARIANTS_OUTFILE)
 
 
 if __name__ == "__main__":
