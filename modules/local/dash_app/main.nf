@@ -18,6 +18,7 @@ process DASH_APP {
     }
 
     input:
+    path(variants)
     path(grouped_variants)
 
     output:
@@ -29,7 +30,7 @@ process DASH_APP {
     export POLARS_MAX_THREADS=${task.cpus}
 
     mkdir -p data
-    mv ${grouped_variants} data/
+    mv ${variants} ${grouped_variants} data/
     cp -r ${moduleDir}/app/* .
 
     # as of Nextflow version 25.04.8, having these versions sent to the versions topic channel

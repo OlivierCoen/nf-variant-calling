@@ -1,6 +1,5 @@
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
 from src.components import graphs
 from src.utils import style
 
@@ -14,17 +13,25 @@ variant_tabs = dmc.Tabs(
         dmc.TabsList(
             children=[
                 dmc.TabsTab(
-                    dmc.Text("SNPs / Indels", fw=500),
-                    className="snp-indel-tabitem",
+                    dmc.Text("SNPs / Indels - windows", fw=500),
+                    value="snp_indel_windows",
                     color="teal",
-                    leftSection=gene_icon,
+                    style=style.HEADER_TABLIST_ITEM,
+                ),
+                dmc.TabsTab(
+                    dmc.Text("SNPs / Indels", fw=500),
                     value="snp_indel",
+                    color="teal",
+                    style=style.HEADER_TABLIST_ITEM,
+                ),
+                dmc.TabsTab(
+                    dmc.Text("Structural variants - windows", fw=500),
+                    value="sv_windows",
+                    color="red",
                     style=style.HEADER_TABLIST_ITEM,
                 ),
                 dmc.TabsTab(
                     dmc.Text("Structural variants", fw=500),
-                    className="sv-tabitem",
-                    leftSection=sample_icon,
                     value="sv",
                     color="red",
                     style=style.HEADER_TABLIST_ITEM,
@@ -33,14 +40,22 @@ variant_tabs = dmc.Tabs(
             style=style.HEADER_TABLIST,
         ),
         dmc.TabsPanel(
+            children=[graphs.snp_indel_window_graph],
+            style=style.TABS_PANEL,
+            value="snp_indel_windows",
+        ),
+        dmc.TabsPanel(
             children=[graphs.snp_indel_graph],
             style=style.TABS_PANEL,
             value="snp_indel",
         ),
         dmc.TabsPanel(
-            children=[
-                graphs.sv_graph,
-            ],
+            children=[graphs.sv_window_graph],
+            style=style.TABS_PANEL,
+            value="sv_windows",
+        ),
+        dmc.TabsPanel(
+            children=[graphs.sv_graph],
             style=style.TABS_PANEL,
             value="sv",
         ),

@@ -14,13 +14,14 @@ process AGGREGATE_DATA {
     val(window_size)
 
     output:
-    tuple val(meta), path("*.parquet"),                                                                         emit: grouped_variants
+    tuple val(meta), path("${prefix}.formated_variants.parquet"),                                               emit: variants
+    tuple val(meta), path("${prefix}.grouped_variants.parquet"),                                                emit: grouped_variants
     tuple val("${task.process}"), val('python'), eval("python3 --version | sed 's/Python //'"),                 topic: versions
     tuple val("${task.process}"), val('polars'), eval('python3 -c "import polars; print(polars.__version__)"'), topic: versions
     tuple val("${task.process}"), val('tqdm'),   eval('python3 -c "import tqdm; print(tqdm.__version__)"'),     topic: versions
 
     script:
-    prefix = task.ext.prefix ?: "${meta.variant_type}.grouped_variants"
+    prefix = "${meta.variant_type}"
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}
@@ -30,7 +31,7 @@ process AGGREGATE_DATA {
         --RO $ref_counts \\
         --AO $alt_counts \\
         --design $design_file \\
-        --out ${prefix}.parquet \\
+        --prefix ${prefix} \\
         --pvalues $pvalue_file \\
         --window-size $window_size
     """

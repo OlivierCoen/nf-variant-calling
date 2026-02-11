@@ -18,35 +18,49 @@ class DataManager:
         folder = Path(config.DATA_FOLDER)
         # compute other static values
         self.variants = {}
+        self.grouped_variants = {}
         self.sorted_chromosomes = {}
         for variant_type in config.VARIANT_TYPES:
             logger.info(f"Preparing {variant_type} data")
 
-            variant_file = folder / f"{variant_type}.grouped_variants.parquet"
+            variant_file = folder / f"{variant_type}.formated_variants.parquet"
+            self.variants[variant_type] = self.prepare_variant_data(variant_file)
 
-            self.variants[variant_type] = self.prepare_data(variant_file)
+            grouped_variant_file = folder / f"{variant_type}.grouped_variants.parquet"
+            self.grouped_variants[variant_type] = self.prepare_window_data(
+                grouped_variant_file
+            )
+
             logger.info(f"{variant_type} data loaded")
 
     @staticmethod
-    def parse_variant_data(vcf_file: Path) -> pl.LazyFrame | None:
-        logger.info(f"Parsing {vcf_file} file")
-        if not Path(vcf_file).is_file():
+    def parse_parquet(file: Path) -> pl.LazyFrame | None:
+        logger.info(f"Parsing {file} file")
+        if not Path(file).is_file():
             return None
-        return pl.scan_parquet(vcf_file)
+        return pl.scan_parquet(file)
 
-    def get_max(self, value: str, variant_type: str) -> int:
+    def get_max(self, value: str, variant_type: str, window: bool) -> int:
+        lf = (
+            self.grouped_variants[variant_type]
+            if window
+            else self.variants[variant_type]
+        )
         return (
-            self.variants[variant_type]
-            .select(pl.col(value).cast(pl.Int64).max().alias("max_val"))
+            lf.select(pl.col(value).cast(pl.Int64).max().alias("max_val"))
             .collect()
             .to_series()
             .item(0)
         )
 
-    def get_min(self, value: str, variant_type: str) -> int:
+    def get_min(self, value: str, variant_type: str, window: bool) -> int:
+        lf = (
+            self.grouped_variants[variant_type]
+            if window
+            else self.variants[variant_type]
+        )
         return (
-            self.variants[variant_type]
-            .select(pl.col(value).cast(pl.Int64).min().alias("min_val"))
+            lf.select(pl.col(value).cast(pl.Int64).min().alias("min_val"))
             .collect()
             .to_series()
             .item(0)
@@ -70,10 +84,8 @@ class DataManager:
         )
 
     @staticmethod
-    def prepare_data(variant_file: Path) -> pl.LazyFrame | None:
-
-        lf = DataManager.parse_variant_data(variant_file)
-
+    def prepare_variant_data(file: Path) -> pl.LazyFrame | None:
+        lf = DataManager.parse_parquet(file)
         if lf is None:
             return None
 
@@ -96,14 +108,62 @@ class DataManager:
             ),
         )
 
-    def get_manhattanplot_data(
+    @staticmethod
+    def prepare_window_data(file: Path) -> pl.LazyFrame | None:
+        lf = DataManager.parse_parquet(file)
+        if lf is None:
+            return None
+
+        return lf.select(
+            pl.col(
+                [
+                    "chromosome",
+                    "position",
+                    "pvalue",
+                    "quality",
+                    "total_depth",
+                    "allele_counts",
+                ]
+            ),
+            (pl.col("chromosome") + "_" + pl.col("position").cast(pl.String)).alias(
+                "snp"
+            ),
+            (pl.col("chromosome") + "_" + pl.col("position").cast(pl.String)).alias(
+                "gene"
+            ),
+        )
+
+    def get_variant_manhattanplot_data(
+        self,
+        data_type: str,
+        quality_range: list[int],
+        depth_range: list[int],
+        chromosomes: list[str],
+    ) -> pd.DataFrame:
+        if self.variants[data_type] is None:
+            return pd.DataFrame()
+
+        return (
+            self.variants[data_type]
+            .filter(pl.col("chromosome").is_in(chromosomes))
+            .filter(
+                pl.col("quality").is_between(quality_range[0], quality_range[1] + 1)
+            )
+            .filter(
+                pl.col("total_depth").is_between(depth_range[0], depth_range[1] + 1)
+            )
+            .collect()
+            .to_pandas()
+        )
+
+    def get_window_manhattanplot_data(
         self,
         data_type: str,
         quality_range: list[int],
         depth_range: list[int],
         nb_chromosomes: int,
     ) -> pd.DataFrame:
-        if self.variants[data_type] is None:
+        if self.grouped_variants[data_type] is None:
             return pd.DataFrame()
 
         chromosomes = (
@@ -115,10 +175,14 @@ class DataManager:
             .to_list()
         )
         return (
-            self.variants[data_type]
+            self.grouped_variants[data_type]
             .filter(pl.col("chromosome").is_in(chromosomes))
-            .filter(pl.col("quality").is_between(quality_range[0], quality_range[1]))
-            .filter(pl.col("total_depth").is_between(depth_range[0], depth_range[1]))
+            .filter(
+                pl.col("quality").is_between(quality_range[0], quality_range[1] + 1)
+            )
+            .filter(
+                pl.col("total_depth").is_between(depth_range[0], depth_range[1] + 1)
+            )
             .collect()
             .to_pandas()
         )

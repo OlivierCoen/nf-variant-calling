@@ -109,7 +109,8 @@ workflow VARIANT_CALLING {
         params.window_size
     )
 
-    ch_grouped_variants = VARIANT_ANALYSIS.out.grouped_variants
+    ch_variants                   = VARIANT_ANALYSIS.out.variants
+    ch_grouped_variants           = VARIANT_ANALYSIS.out.grouped_variants
 
     // -----------------------------------------------------------------
     // REPORTING (DASH APP, MULTIQC, ...)
@@ -119,6 +120,7 @@ workflow VARIANT_CALLING {
     REPORTING(
         ch_filtered_vcf_tbi,
         ch_vcf_tbi,
+        ch_variants,
         ch_grouped_variants,
         ch_genome_fai_dict,
         params.multiqc_config,

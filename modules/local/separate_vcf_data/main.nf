@@ -12,13 +12,14 @@ process SEPARATE_VCF_DATA {
     tuple val(meta), path(vcf)
 
     output:
-    tuple val(meta), path("*variants.parquet"),                                                                 emit: variants
-    tuple val(meta), path("*RO_counts.parquet"),                                                                emit: ref_counts
-    tuple val(meta), path("*AO_counts.parquet"),                                                                emit: alt_counts
+    tuple val(meta), path("${prefix}.variants.parquet"),                                                        emit: variants
+    tuple val(meta), path("${prefix}.RO_counts.parquet"),                                                       emit: ref_counts
+    tuple val(meta), path("${prefix}.AO_counts.parquet"),                                                       emit: alt_counts
     tuple val("${task.process}"), val('python'), eval("python3 --version | sed 's/Python //'"),                 topic: versions
     tuple val("${task.process}"), val('polars'), eval('python3 -c "import polars; print(polars.__version__)"'), topic: versions
 
     script:
+    prefix = "${meta.variant_type}"
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}
@@ -26,9 +27,9 @@ process SEPARATE_VCF_DATA {
     separate_vcf_data.py \\
         --vcf $vcf
 
-    mv variants.parquet ${meta.variant_type}.variants.parquet
-    mv RO_counts.parquet ${meta.variant_type}.RO_counts.parquet
-    mv AO_counts.parquet ${meta.variant_type}.AO_counts.parquet
+    mv variants.parquet ${prefix}.variants.parquet
+    mv RO_counts.parquet ${prefix}.RO_counts.parquet
+    mv AO_counts.parquet ${prefix}.AO_counts.parquet
     """
 
 }

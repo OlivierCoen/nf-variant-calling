@@ -7,5 +7,7 @@ def get_graph(graph_id: str):
 
 
 snp_indel_graph = get_graph("snp-indel-graph")
+snp_indel_window_graph = get_graph("snp-indel-window-graph")
 
 sv_graph = get_graph("sv-graph")
+sv_window_graph = get_graph("sv-window-graph")

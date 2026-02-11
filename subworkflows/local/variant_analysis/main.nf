@@ -44,6 +44,7 @@ workflow VARIANT_ANALYSIS {
     )
 
     emit:
+    variants                   = AGGREGATE_DATA.out.variants
     grouped_variants           = AGGREGATE_DATA.out.grouped_variants
 
 }

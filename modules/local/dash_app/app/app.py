@@ -1,14 +1,9 @@
 import socket
 
 import dash_mantine_components as dmc
-from dash_extensions.enrich import (
-    DashProxy,
-    ServersideOutputTransform,
-    TriggerTransform,
-    html,
-)
-from dash_extensions.logging import NotificationsLogHandler
-
+import diskcache
+from dash import DiskcacheManager
+from dash_extensions.enrich import DashProxy, TriggerTransform, html
 from src.callbacks import data
 from src.components import right_sidebar, stores, tabs, tooltips
 from src.utils import config, style
@@ -16,14 +11,9 @@ from src.utils import config, style
 DEBUG = True
 # DEBUG = False
 
-# -------------------- SETUP LOGGING --------------------
 
-log_handler = NotificationsLogHandler()
-logger = log_handler.setup_logger(__name__)
-
-# -------------------- APP --------------------
-# init the application
-logger.info("Creating app")
+cache = diskcache.Cache("./cache")
+background_callback_manager = DiskcacheManager(cache)
 
 app = DashProxy(
     __name__,
@@ -32,7 +22,8 @@ app = DashProxy(
     suppress_callback_exceptions=(not DEBUG),
     update_title=config.UPDATE_TITLE,
     external_stylesheets=[dmc.styles.ALL],
-    transforms=[TriggerTransform(), ServersideOutputTransform()],
+    background_callback_manager=background_callback_manager,
+    transforms=[TriggerTransform()],
 )
 
 # -------------------- LAYOUT --------------------
@@ -47,8 +38,7 @@ def serve_layout():
                     tabs.variant_tabs,
                     *stores.stores_to_load,
                     *tooltips.tooltips_to_load,
-                ]
-                + log_handler.embed(),
+                ],
                 id="layout",
                 style=style.LAYOUT,
             )
@@ -75,7 +65,6 @@ def find_port(port: int) -> int:
 
 
 if __name__ == "__main__":
-    logger.info("Running server")
     # setting prune_errors to False avoids error message pruning
     # in order to get original tracebacks
     # (very useful for debugging)

@@ -387,7 +387,7 @@ class _ManhattanPlot:
                     y=y_values,
                     mode="markers",
                     showlegend=showlegend,
-                    name=self.chromosomes,
+                    name=self.chromosomes[0],
                     marker={"size": point_size},
                     text=hover_text,
                 )

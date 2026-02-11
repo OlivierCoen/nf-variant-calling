@@ -12,6 +12,9 @@ pl.Config.set_streaming_chunk_size(1e6)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+GROUPED_VARIANTS_OUTFILE_SUFFIX = "grouped_variants.parquet"
+VARIANTS_OUTFILE_SUFFIX = "formated_variants.parquet"
+
 QUANTILE = 0.05
 
 
@@ -60,11 +63,9 @@ def parse_args():
         help="Path to design file",
     )
     parser.add_argument(
-        "--out",
-        type=Path,
-        dest="outfile",
+        "--prefix",
         required=True,
-        help="Path to output parquet file",
+        help="Prefix for output files",
     )
     parser.add_argument(
         "--window-size",
@@ -90,6 +91,20 @@ def add_windows(lf: pl.LazyFrame, window_size: int) -> pl.LazyFrame:
 
 
 def get_allele_count_expr(populations: list[str]):
+    for pop in populations:
+        yield (
+            f"{pop}_F: "
+            + pl.col(f"{pop}_F_RO").cast(pl.String)
+            + " / "
+            + pl.col(f"{pop}_F_AO").cast(pl.String)
+            + f"<br>{pop}_M: "
+            + pl.col(f"{pop}_M_RO").cast(pl.String)
+            + " / "
+            + pl.col(f"{pop}_M_AO").cast(pl.String)
+        ).alias(pop)
+
+
+def get_window_allele_count_expr(populations: list[str]):
     for pop in populations:
         yield (
             f"{pop}_F: "
@@ -179,11 +194,31 @@ def main():
     logger.info(
         f"Computing quantile {QUANTILE} of pvalue for each pair of contig & window"
     )
-    chrom_files = []
+    chrom_window_files = []
+    chrom_variant_files = []
     for i, contig in tqdm(enumerate(contigs), total=len(contigs)):
-        contig_lf = (
-            lf.filter(pl.col("CHROM") == contig)
-            .group_by(  # inserting CHROM in the group_by in order to get it back after the agg
+        contig_lf = lf.filter(pl.col("CHROM") == contig)
+
+        variant_lf = (
+            contig_lf.with_columns(get_allele_count_expr(populations))
+            .with_columns(
+                pl.concat_str(populations, separator="<br>").alias("allele_counts")
+            )
+            .rename({"CHROM": "chromosome", "POS": "position", "QUAL": "quality"})
+            .select(
+                [
+                    "chromosome",
+                    "position",
+                    "pvalue",
+                    "quality",
+                    "total_depth",
+                    "allele_counts",
+                ]
+            )
+        )
+
+        aggregated_lf = (
+            contig_lf.group_by(  # inserting CHROM in the group_by in order to get it back after the agg
                 ["CHROM", "window"]
             )
             .agg(
@@ -193,7 +228,7 @@ def main():
                 pl.col(RO_cols + AO_cols).mean().name.suffix("_mean"),
                 pl.col(RO_cols + AO_cols).std().name.suffix("_std"),
             )
-            .with_columns(get_allele_count_expr(populations))
+            .with_columns(get_window_allele_count_expr(populations))
             .with_columns(
                 pl.concat_str(populations, separator="<br>").alias("allele_counts")
             )
@@ -210,18 +245,29 @@ def main():
             )
         )
 
-        chrom_file = f"chrom_{i}.parquet"
-        contig_lf.sink_parquet(chrom_file)
-        chrom_files.append(chrom_file)
+        chrom_variant_file = f"chrom_{i}.variants.parquet"
+        variant_lf.sink_parquet(chrom_variant_file)
+        chrom_variant_files.append(chrom_variant_file)
 
-    chrom_lfs = [pl.scan_parquet(file) for file in chrom_files]
-    total_lf = pl.concat(chrom_lfs, how="vertical")
+        chrom_window_file = f"chrom_{i}.grouped_variants.parquet"
+        aggregated_lf.sink_parquet(chrom_window_file)
+        chrom_window_files.append(chrom_window_file)
 
-    logger.info(f"Saving data to {args.outfile}")
-    total_lf.sink_parquet(args.outfile)
+    logger.info("Concatenating data from all chromosomes")
+    chrom_variant_lfs = [pl.scan_parquet(file) for file in chrom_variant_files]
+    variant_lf = pl.concat(chrom_variant_lfs, how="vertical")
+
+    chrom_window_lfs = [pl.scan_parquet(file) for file in chrom_window_files]
+    window_lf = pl.concat(chrom_window_lfs, how="vertical")
+
+    logger.info("Saving data")
+    variant_lf.sink_parquet(f"{args.prefix}.{VARIANTS_OUTFILE_SUFFIX}")
+    window_lf.sink_parquet(f"{args.prefix}.{GROUPED_VARIANTS_OUTFILE_SUFFIX}")
 
     logger.info("Removing temporary files")
-    for file in chrom_files:
+    for file in chrom_variant_files:
+        Path(file).unlink()
+    for file in chrom_window_files:
         Path(file).unlink()
 
     # quantile_lf.show_graph(engine="streaming", plan_stage="physical")

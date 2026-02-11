@@ -18,6 +18,7 @@ workflow REPORTING {
     take:
     ch_filtered_vcf_tbi
     ch_vcf_tbi
+    ch_variants
     ch_grouped_variants
     ch_genome_fai_dict
     multiqc_config
@@ -51,6 +52,7 @@ workflow REPORTING {
     // -----------------------------------------------------------------
 
     DASH_APP(
+        ch_variants.map{ meta, file -> file }.collect(),
         ch_grouped_variants.map{ meta, file -> file }.collect()
     )
 
