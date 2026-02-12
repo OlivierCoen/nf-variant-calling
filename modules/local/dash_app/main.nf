@@ -29,9 +29,10 @@ process DASH_APP {
     """
     export POLARS_MAX_THREADS=${task.cpus}
 
-    mkdir -p data
-    mv ${variants} ${grouped_variants} data/
-    cp -r ${moduleDir}/app/* .
+    cp -r ${moduleDir}/apps .
+    mkdir -p apps/variants/data apps/windows/data
+    cp ${variants} apps/variants/data/
+    cp ${grouped_variants} apps/windows/data
 
     # as of Nextflow version 25.04.8, having these versions sent to the versions topic channel
     # results in ERROR ~ No such file or directory: <task workdir>/.command.env

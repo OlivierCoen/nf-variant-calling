@@ -9,7 +9,6 @@ from src.components import right_sidebar, stores, tabs, tooltips
 from src.utils import config, style
 
 DEBUG = True
-# DEBUG = False
 
 
 cache = diskcache.Cache("./cache")

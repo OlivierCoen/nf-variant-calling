@@ -55,6 +55,7 @@ SIDEBAR = {
     "width": SIDEBAR_WIDTH,
     "height": "100vh",
     "alignItems": "center",
+    "background-color": "#f5f5f5",
 }
 
 

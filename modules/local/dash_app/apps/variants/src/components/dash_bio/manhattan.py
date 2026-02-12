@@ -38,7 +38,7 @@ def ManhattanPlot(
     genomewideline_color="#EF553B",
     genomewideline_width=1,
     highlight=True,
-    highlight_color="red",
+    highlight_color="black",
 ):
     mh = _ManhattanPlot(
         dataframe,
@@ -162,20 +162,23 @@ class _ManhattanPlot:
 
         self.chromosomes = list(chrom_size_dict.keys())
 
-        self.data["cum_pos"] = self.data.apply(
+        self.data["cumulative_position"] = self.data.apply(
             lambda row: (
                 self.cumulative_previous_sizes[row["chromosome"]] + row["position"]
             ),
             axis=1,
         )
 
+        # sorting data by cumulative_position
+        self.data.sort_values(by=["cumulative_position"], ascending=True, inplace=True)
+
         tick_mininums = (
-            self.data.groupby("chromosome")["cum_pos"]
+            self.data.groupby("chromosome", sort=False)["cumulative_position"]
             .apply(lambda x: x.iloc[0])
             .to_dict()
         )
         tick_maxinums = (
-            self.data.groupby("chromosome")["cum_pos"]
+            self.data.groupby("chromosome", sort=False)["cumulative_position"]
             .apply(lambda x: x.iloc[-1])
             .to_dict()
         )
@@ -185,13 +188,14 @@ class _ManhattanPlot:
         for tick_min, tick_max in zip(tick_mininums.values(), tick_maxinums.values()):
             self.ticks.append(int((tick_min + tick_max) / 2) + 1)
 
-        # I do not know why we have to reverse the labels, but it's the only way it works
-        self.ticksLabels = self.chromosomes[::-1]
+        self.ticksLabels = self.chromosomes
 
     def get_hover_text(self, df: pd.DataFrame):
         return (
             "SNP: "
             + df[self.snp_colname].astype(str)
+            + "<br>POSITION: "
+            + df[self.position_colname].astype(str)
             + "<br>GENE: "
             + df[self.gene_colname].astype(str)
             + "<br>P-VALUE (QUANTILE 5%): "
@@ -227,7 +231,7 @@ class _ManhattanPlot:
         genomewideline_color="red",
         genomewideline_width=1,
         highlight=True,
-        highlight_color="red",
+        highlight_color="black",
     ):
         """Keyword arguments:
         - title (string; default 'Manhattan Plot'): The title of the
@@ -262,9 +266,6 @@ class _ManhattanPlot:
           wide line.
         - highlight (bool; default True): Whether to turn on or off the
             highlighting of data points considered significant.
-        - highlight_color (string; default 'red'): Color of the data
-            points highlighted because they are significant. Can be in any
-            color format accepted by plotly.graph_objects.
 
         Returns:
         - A figure formatted for plotly.graph_objects.
@@ -341,12 +342,13 @@ class _ManhattanPlot:
 
                 highlight_hover_text = self.get_hover_text(tmp)
 
+                x_values = tmp["cumulative_position"].values
                 y_values = self.get_yvalues(tmp)
 
                 if not tmp.empty:
                     fig.add_trace(
                         go.Scattergl(
-                            x=tmp[self.position_colname].values,
+                            x=x_values,
                             y=y_values,
                             mode="markers",
                             text=highlight_hover_text,
@@ -363,7 +365,7 @@ class _ManhattanPlot:
         if tmp.empty:
             data = self.data
         else:
-            data = self.data.drop(self.data.index[tmp.index])
+            data = self.data.loc[~self.data.index.isin(tmp.index)]
 
         if len(self.chromosomes) == 1:
             # If single chromosome, ticks and labels automatic.
@@ -394,7 +396,6 @@ class _ManhattanPlot:
             )
         else:
             # if multiple chrms, use the ticks and labels you created above.
-
             layout = go.Layout(
                 title=title,
                 xaxis={
@@ -416,11 +417,7 @@ class _ManhattanPlot:
                 chrom_data = data[data[self.chrom_colname] == chrom]
                 hover_text = self.get_hover_text(chrom_data)
 
-                x_values = (
-                    self.cumulative_previous_sizes[chrom]
-                    + chrom_data[self.position_colname].values
-                )
-
+                x_values = chrom_data["cumulative_position"].values
                 y_values = self.get_yvalues(chrom_data)
 
                 fig.add_trace(
