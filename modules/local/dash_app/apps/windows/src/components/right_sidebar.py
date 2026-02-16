@@ -12,7 +12,6 @@ snp_indel_max_quality = data_manager.get_max("quality", "snp_indel")
 chromosomes = data_manager.get_chromosomes("snp_indel")
 snp_indel_num_chromosomes = len(chromosomes)
 
-
 DEFAULT_NB_CHROMOSOMES = 100
 
 
@@ -21,7 +20,7 @@ options = dmc.Stack(
         dmc.Text("Number of chromosomes displayed"),
         dmc.Slider(
             id="nb-chromosomes",
-            value=DEFAULT_NB_CHROMOSOMES,
+            value=min(DEFAULT_NB_CHROMOSOMES, snp_indel_num_chromosomes),
             color="orange",
             min=1,
             max=snp_indel_num_chromosomes,

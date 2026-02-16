@@ -24,7 +24,6 @@ def ManhattanPlot(
     total_depth="total_depth",
     allele_counts="allele_counts",
     logp=True,
-    title="Manhattan Plot",
     showgrid=True,
     xlabel=None,
     ylabel="-log10(p)",
@@ -54,7 +53,6 @@ def ManhattanPlot(
     )
 
     return mh.figure(
-        title=title,
         showgrid=showgrid,
         xlabel=xlabel,
         ylabel=ylabel,
@@ -198,11 +196,11 @@ class _ManhattanPlot:
             + df[self.position_colname].astype(str)
             + "<br>GENE: "
             + df[self.gene_colname].astype(str)
-            + "<br>P-VALUE (QUANTILE 5%): "
+            + "<br>P-VALUE: "
             + df[self.pvalue_colname].astype(str)
-            + "<br>MEAN QUALITY: "
+            + "<br>QUALITY: "
             + df[self.quality_colname].astype(str)
-            + "<br>MEAN TOTAL DEPTH: "
+            + "<br>TOTAL DEPTH: "
             + df[self.total_depth_colname].astype(str)
             + "<br><br>ALLELE COUNTS (REF / ALT):<br>"
             + df[self.allele_counts_colname].astype(str)
@@ -217,7 +215,6 @@ class _ManhattanPlot:
 
     def figure(
         self,
-        title="Manhattan Plot",
         showgrid=True,
         xlabel=None,
         ylabel="-log10(p)",
@@ -234,8 +231,6 @@ class _ManhattanPlot:
         highlight_color="black",
     ):
         """Keyword arguments:
-        - title (string; default 'Manhattan Plot'): The title of the
-            graph.
         - showgrid (bool; default True): Boolean indicating whether
             gridlines should be shown.
         - xlabel (string; optional): Label of the x axis.
@@ -370,7 +365,6 @@ class _ManhattanPlot:
         if len(self.chromosomes) == 1:
             # If single chromosome, ticks and labels automatic.
             layout = go.Layout(
-                title=title,
                 xaxis={
                     "title": self.xlabel if xlabel is None else xlabel,
                     "showgrid": showgrid,
@@ -397,7 +391,6 @@ class _ManhattanPlot:
         else:
             # if multiple chrms, use the ticks and labels you created above.
             layout = go.Layout(
-                title=title,
                 xaxis={
                     "title": self.xlabel if xlabel is None else xlabel,
                     "showgrid": showgrid,

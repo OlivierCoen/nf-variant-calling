@@ -54,8 +54,8 @@ SIDEBAR = {
     "right": 5,
     "width": SIDEBAR_WIDTH,
     "height": "100vh",
-    "alignItems": "center",
     "background-color": "#f5f5f5",
+    "padding": "10px",
 }
 
 

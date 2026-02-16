@@ -1,8 +1,9 @@
 import socket
 
 import dash_mantine_components as dmc
-import diskcache
-from dash import DiskcacheManager
+
+# import diskcache
+# from dash import DiskcacheManager
 from dash_extensions.enrich import DashProxy, TriggerTransform, html
 from src.callbacks import data
 from src.components import right_sidebar, stores, tabs, tooltips
@@ -11,8 +12,8 @@ from src.utils import config, style
 DEBUG = True
 
 
-cache = diskcache.Cache("./cache")
-background_callback_manager = DiskcacheManager(cache)
+# cache = diskcache.Cache("./cache")
+# background_callback_manager = DiskcacheManager(cache)
 
 app = DashProxy(
     __name__,
@@ -21,7 +22,7 @@ app = DashProxy(
     suppress_callback_exceptions=(not DEBUG),
     update_title=config.UPDATE_TITLE,
     external_stylesheets=[dmc.styles.ALL],
-    background_callback_manager=background_callback_manager,
+    # background_callback_manager=background_callback_manager,
     transforms=[TriggerTransform()],
 )
 
