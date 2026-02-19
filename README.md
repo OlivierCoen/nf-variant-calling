@@ -13,38 +13,61 @@
 
 ## Introduction
 
-**nf-variant-calling** is a simple bioinformatics pipeline that performs variant calling on a custom genome fasta file using Illumina short reads.
+**nf-variant-calling** is a bioinformatics pipeline that performs variant calling on using short reads and a genome fasta file.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+### Read samplesheet
 
-First, prepare a samplesheet with your input data that looks as follows:
+First, prepare a samplesheet listing your input reads and their associated metadata.
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,population,phenotype,lane,fastq_1,fastq_2
+control,pop1,phenotype1,1,control_R1.fastq.gz,control_R2.fastq.gz
+control,pop1,phenotype1,2,control_R1.fastq.gz,control_R2.fastq.gz
+sample1,pop2,phenotype2,1,sample1_R1.fastq.gz,sample1_R2.fastq.gz
 ```
 
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
--->
+> [!NOTE]
+> The `lane` and `fastq_2̀` fields are optional. If `fastq_2̀` is not provided, files will be interpreted as single-end reads.
+
+### Pipeline parameters
+
+Then, you must prepare a `params.yaml` file with **at least** the following content:
+
+```yaml
+input: <PATH TO SAMPLESHEET>
+genome: <PATH TO GENOME FASTA FILE>
+outdir: <OUTDIR>
+```
+
+> [!NOTE]
+> The full list of parameters can be obtained with `nextflow run OlivierCoen/nf-variant-calling --help`.
+
+### Advanced usage: custom config
+
+Finally, you can prepare a `custom.config` file if you want to tweak the pipeline configuration.
+See [the configuration documentation](docs/configuration.md) for more details.
+
+
+### Run the pipeline
 
 Now, you can run the pipeline using:
 
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
-
 ```bash
 nextflow run OlivierCoen/nf-variant-calling \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
+   -latest \
+   -profile <docker/apptainer/singularity/conda/...> \
+   -params-file params.yaml \
+   [-config custom.config \]
+   -resume
 ```
 
 > [!WARNING]

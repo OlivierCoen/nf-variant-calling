@@ -79,7 +79,9 @@ workflow PIPELINE_INITIALISATION {
     ch_reads = ch_samplesheet
                     .map{
                         meta, reads ->
-                            [ [ id: meta.id, lane: meta.lane ], reads ]
+                            // giving a unique lane number if not provided
+                            def lane = meta.lane ?: reads[0].baseName
+                            [ [ id: meta.id, lane: lane ], reads ]
                     }
 
     ch_design_file = ch_samplesheet
