@@ -15,5 +15,3 @@ dependencies:
   - conda-forge::dash-iconify==0.1.2
   - conda-forge::dash-ag-grid==32.3.2
   - conda-forge::tqdm==4.67.3
-  - pip:
-      - dash[diskcache]==5.6.3
