@@ -25,12 +25,12 @@ workflow CALL_VARIANTS {
 
     ch_all_bams = ch_bam
                     .map { meta, bam -> bam }
-                    .collect()
+                    .toSortedList()
                     .map { bam_files -> [ bam_files ] }
 
     ch_all_bais = ch_bai
                     .map { meta, bai -> bai }
-                    .collect()
+                    .toSortedList()
                     .map { bai_files -> [ bai_files ] }
 
     ch_all_bam_bai_with_region = ch_all_bams
