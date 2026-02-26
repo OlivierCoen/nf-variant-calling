@@ -1,4 +1,6 @@
+include { BCFTOOLS_FILL_TAGS                             } from '../../../modules/local/bcftools/fill_tags'
 include { BCFTOOLS_VIEW as BASE_FILTERING                } from '../../../modules/local/bcftools/view'
+include { BCFTOOLS_VIEW as ADVANCED_FILTERING            } from '../../../modules/local/bcftools/view'
 include { ADDITIONAL_FILTERING                           } from '../../../modules/local/additional_filtering'
 include { BCFTOOLS_INDEX                                 } from '../../../modules/local/bcftools/index'
 
@@ -14,11 +16,28 @@ workflow FILTER_VARIANTS {
 
     main:
 
+    ch_vcf = ch_variants.map { meta, vcf, tbi -> [ meta, vcf ] }
+    ch_tbi = ch_variants.map { meta, vcf, tbi -> [ meta, tbi ] }
+
+    // -----------------------------------------------------------------
+    // IN CASE, ADD ALLMISSING TAGS TO VCF
+    // -----------------------------------------------------------------
+
+    BCFTOOLS_FILL_TAGS( ch_vcf )
+
     // -----------------------------------------------------------------
     // BASE FILTERING
     // -----------------------------------------------------------------
 
-    BASE_FILTERING ( ch_variants )
+    BASE_FILTERING (
+        BCFTOOLS_FILL_TAGS.out.bcf.join( ch_tbi )
+    )
+
+    // -----------------------------------------------------------------
+    // ADVANCED FILTERING BASED ON ALLELE FREQUENCY AT THE SAMPLE LEVEL
+    // -----------------------------------------------------------------
+
+    ADVANCED_FILTERING( BASE_FILTERING.out.vcf_tbi )
 
     // -----------------------------------------------------------------
     // ADDITIONAL FILTERING
