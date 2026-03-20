@@ -1,6 +1,6 @@
 include { BCFTOOLS_FILL_TAGS                             } from '../../../modules/local/bcftools/fill_tags'
 include { BCFTOOLS_VIEW as BASE_FILTERING                } from '../../../modules/local/bcftools/view'
-include { BCFTOOLS_VIEW as ADVANCED_FILTERING            } from '../../../modules/local/bcftools/view'
+//include { BCFTOOLS_VIEW as ADVANCED_FILTERING            } from '../../../modules/local/bcftools/view'
 include { ADDITIONAL_FILTERING                           } from '../../../modules/local/additional_filtering'
 include { BCFTOOLS_INDEX                                 } from '../../../modules/local/bcftools/index'
 
@@ -37,7 +37,7 @@ workflow FILTER_VARIANTS {
     // ADVANCED FILTERING BASED ON ALLELE FREQUENCY AT THE SAMPLE LEVEL
     // -----------------------------------------------------------------
 
-    ADVANCED_FILTERING( BASE_FILTERING.out.vcf_tbi )
+    //ADVANCED_FILTERING( BASE_FILTERING.out.vcf_tbi )
 
     // -----------------------------------------------------------------
     // ADDITIONAL FILTERING
