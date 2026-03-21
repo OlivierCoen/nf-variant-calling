@@ -66,8 +66,7 @@ workflow VARIANT_CALLING {
         MAPPING_MARK_DUPLICATES.out.bai,
         ch_genome_fai_dict,
         ch_genome_region_file,
-        params.skip_call_snps_indels,
-        params.skip_call_svs
+        params.callers
     )
 
     // -----------------------------------------------------------------

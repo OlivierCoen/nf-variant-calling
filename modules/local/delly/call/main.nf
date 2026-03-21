@@ -34,7 +34,7 @@ process DELLY_CALL {
     def prefix = task.ext.prefix ?: "${meta.id}_${region.chrom}_${region.start}_${region.end}"
     """
     # making file for regions to exclude
-    egrep -v "^${region.chrom}\s+${region.start}\s+${region.end}\$" ${all_regions_file} > ${prefix}.regions.bed
+    egrep -v "^${region.chrom}\\s+${region.start}\\s+${region.end}\$" ${all_regions_file} > ${prefix}.regions.bed
 
     delly \\
         call \\
@@ -43,6 +43,7 @@ process DELLY_CALL {
         --genome ${fasta} \\
         ${bam_files} \\
         | bgzip ${args2} --threads ${task.cpus} --stdout \\
-        > ${prefix}.vcf.gz && tabix ${prefix}.vcf.gz
+        > ${prefix}.vcf.gz \\
+        && tabix ${prefix}.vcf.gz
     """
 }

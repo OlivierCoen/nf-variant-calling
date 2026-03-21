@@ -1,5 +1,5 @@
 process BCFTOOLS_VIEW {
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -16,7 +16,7 @@ process BCFTOOLS_VIEW {
 
     script:
     def args = task.ext.args ?: ""
-    prefix = task.ext.prefix ?: "${meta.variant_type}.filtered"
+    prefix = task.ext.prefix ?: "${meta.id}.filtered"
     """
     bcftools view \\
         --output-type z \\

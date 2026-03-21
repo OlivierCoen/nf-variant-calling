@@ -1,6 +1,6 @@
 process SEPARATE_VCF_DATA {
 
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -19,7 +19,7 @@ process SEPARATE_VCF_DATA {
     tuple val("${task.process}"), val('polars'), eval('python3 -c "import polars; print(polars.__version__)"'), topic: versions
 
     script:
-    prefix = "${meta.variant_type}"
+    prefix = "${meta.id}"
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}

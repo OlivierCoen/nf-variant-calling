@@ -1,6 +1,6 @@
 process AGGREGATE_DATA {
 
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
@@ -14,14 +14,14 @@ process AGGREGATE_DATA {
     val(window_size)
 
     output:
-    tuple val(meta), path("${prefix}.formated_variants.parquet"),                                               emit: variants
-    tuple val(meta), path("${prefix}.grouped_variants.parquet"),                                                emit: grouped_variants
+    tuple val(meta), path("*.formated_variants.parquet"),                                                       emit: variants
+    tuple val(meta), path("*.grouped_variants.parquet"),                                                        emit: grouped_variants
     tuple val("${task.process}"), val('python'), eval("python3 --version | sed 's/Python //'"),                 topic: versions
     tuple val("${task.process}"), val('polars'), eval('python3 -c "import polars; print(polars.__version__)"'), topic: versions
     tuple val("${task.process}"), val('tqdm'),   eval('python3 -c "import tqdm; print(tqdm.__version__)"'),     topic: versions
 
     script:
-    prefix = "${meta.variant_type}"
+    def prefix = "${meta.id}.${meta.type}"
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}

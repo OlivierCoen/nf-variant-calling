@@ -23,7 +23,11 @@ class DataManager:
         for variant_type in config.VARIANT_TYPES:
             logger.info(f"Preparing {variant_type} data")
 
-            variant_file = folder / f"{variant_type}.{config.INPUT_FILE_SUFFIX}"
+            try:
+                variant_file = list(folder.glob(f"*{variant_type}.{config.INPUT_FILE_SUFFIX}"))[0]
+            except IndexError:
+                raise FileNotFoundError(f"Could not find variant file for {variant_type}")
+
             self.variants[variant_type] = self.prepare_data(variant_file)
 
             self.quantiles[variant_type] = self.get_quantiles(variant_type)

@@ -1,6 +1,6 @@
 process CMH_TEST {
 
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"

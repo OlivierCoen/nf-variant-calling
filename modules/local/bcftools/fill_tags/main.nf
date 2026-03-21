@@ -1,5 +1,5 @@
 process BCFTOOLS_FILL_TAGS {
-    tag "${meta.id} - ${meta.variant_type}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"

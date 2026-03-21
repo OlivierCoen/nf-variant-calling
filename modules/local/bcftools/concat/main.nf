@@ -1,5 +1,5 @@
 process BCFTOOLS_CONCAT {
-    tag "${meta.id} - ${meta.variant_type}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -16,7 +16,7 @@ process BCFTOOLS_CONCAT {
 
     script:
     def args = task.ext.args   ?: ''
-    prefix   = task.ext.prefix ?: "${meta.id}"
+    prefix   = task.ext.prefix ?: "${meta.id}_${meta.caller}"
     """
     bcftools concat \\
         --output-type b \\

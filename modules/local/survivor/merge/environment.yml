@@ -4,5 +4,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - conda-forge::python=2.7.15
-  - bioconda::manta=1.6.0
+  - bioconda::survivor=1.0.7
+  - bioconda::tabix=1.11

@@ -1,5 +1,5 @@
 process BCFTOOLS_INDEX {
-    tag "$meta.id"
+    tag "${meta.id} - ${meta.type}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"

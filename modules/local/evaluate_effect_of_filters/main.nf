@@ -1,6 +1,6 @@
 process EVALUATE_EFFECT_OF_FILTERS {
 
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
@@ -20,7 +20,7 @@ process EVALUATE_EFFECT_OF_FILTERS {
 
     script:
     def args = task.ext.args ?: ""
-    prefix = task.ext.prefix ?: "${meta.variant_type}.effect_of_filters_on_variants"
+    prefix = task.ext.prefix ?: "${meta.id}.effect_of_filters_on_variants"
     def is_using_containers = workflow.containerEngine ? true : false
     """
     # limiting number of threads

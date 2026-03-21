@@ -1,6 +1,6 @@
 process ADDITIONAL_FILTERING {
 
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.type}"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
@@ -20,7 +20,7 @@ process ADDITIONAL_FILTERING {
     tuple val("${task.process}"), val('matplotlib'),   eval('python3 -c "import matplotlib; print(matplotlib.__version__)"'), topic: versions
 
     script:
-    prefix = task.ext.prefix ?: "${meta.variant_type}.refiltered"
+    prefix = task.ext.prefix ?: "${meta.id}.refiltered"
     """
     # limiting number of threads
     export POLARS_MAX_THREADS=${task.cpus}

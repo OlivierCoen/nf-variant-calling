@@ -1,6 +1,6 @@
-include { SEPARATE_VCF_DATA                   } from '../../../modules/local/separate_vcf_data'
-include { CMH_TEST                            } from '../../../modules/local/cmh_test'
-include { AGGREGATE_DATA                      } from '../../../modules/local/aggregate_data'
+include { SEPARATE_VCF_DATA                             } from '../../../modules/local/separate_vcf_data'
+include { CMH_TEST                                      } from '../../../modules/local/cmh_test'
+include { AGGREGATE_DATA                                } from '../../../modules/local/aggregate_data'
 
 
 

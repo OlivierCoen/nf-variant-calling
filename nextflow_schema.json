@@ -96,19 +96,12 @@
             "fa_icon": "fas fa-terminal",
             "description": "Options for variant calling.",
             "properties": {
-                "skip_call_snps_indels": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip calling SNPs and indels.",
+                "callers": {
+                    "type": "string",
+                    "description": "Callers to run",
+                    "default": "freebayes,manta",
                     "fa_icon": "far fa-stop-circle",
-                    "help_text": "Use this option to skip calling SNPs and indels."
-                },
-                "skip_call_svs": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip calling structural variants.",
-                    "fa_icon": "far fa-stop-circle",
-                    "help_text": "Use this option to skip calling structural variants."
+                    "help_text": "List of callers to use, separated by commas. Options: freebayes, gatk, manta, delly"
                 },
                 "reference_chunksize": {
                     "type": "integer",
