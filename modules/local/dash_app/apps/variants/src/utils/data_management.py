@@ -20,17 +20,21 @@ class DataManager:
         # compute other static values
         self.variants = {}
         self.quantiles = {}
+        self.parsed_variant_types = []
         for variant_type in config.VARIANT_TYPES:
             logger.info(f"Preparing {variant_type} data")
 
             try:
-                variant_file = list(folder.glob(f"*{variant_type}.{config.INPUT_FILE_SUFFIX}"))[0]
+                variant_file = list(
+                    folder.glob(f"*{variant_type}.{config.INPUT_FILE_SUFFIX}")
+                )[0]
             except IndexError:
-                raise FileNotFoundError(f"Could not find variant file for {variant_type}")
+                logger.warning(f"Could not find variant file for {variant_type}")
+                continue
 
             self.variants[variant_type] = self.prepare_data(variant_file)
-
             self.quantiles[variant_type] = self.get_quantiles(variant_type)
+            self.parsed_variant_types.append(variant_type)
 
             logger.info(f"{variant_type} data loaded")
 

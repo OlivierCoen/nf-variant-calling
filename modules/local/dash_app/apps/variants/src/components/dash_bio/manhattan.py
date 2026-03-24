@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from pandas.api.types import is_numeric_dtype
-from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -299,7 +298,7 @@ class _ManhattanPlot:
         #######################################################################
 
         logger.info("Adding vertical lines")
-        for chrom in tqdm(self.chromosomes[1:]):
+        for chrom in self.chromosomes[1:]:
             fig.add_vline(
                 x=self.cumulative_previous_sizes[chrom], line_width=1, line_color="grey"
             )
@@ -406,7 +405,7 @@ class _ManhattanPlot:
                 hovermode="closest",
             )
 
-            for i, chrom in tqdm(enumerate(self.chromosomes)):
+            for i, chrom in enumerate(self.chromosomes):
                 chrom_data = data[data[self.chrom_colname] == chrom]
                 hover_text = self.get_hover_text(chrom_data)
 

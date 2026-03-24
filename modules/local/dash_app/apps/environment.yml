@@ -14,4 +14,3 @@ dependencies:
   - conda-forge::dash-extensions==2.0.4
   - conda-forge::dash-iconify==0.1.2
   - conda-forge::dash-ag-grid==32.3.2
-  - conda-forge::tqdm==4.67.3

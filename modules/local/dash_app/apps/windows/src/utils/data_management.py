@@ -18,13 +18,20 @@ class DataManager:
         folder = Path(config.DATA_FOLDER)
         # compute other static values
         self.grouped_variants = {}
+        self.parsed_variant_types = []
         for variant_type in config.VARIANT_TYPES:
             logger.info(f"Preparing {variant_type} data")
 
-            grouped_variant_file = folder / f"{variant_type}.{config.INPUT_FILE_SUFFIX}"
-            self.grouped_variants[variant_type] = self.prepare_data(
-                grouped_variant_file
-            )
+            try:
+                variant_file = list(
+                    folder.glob(f"*{variant_type}.{config.INPUT_FILE_SUFFIX}")
+                )[0]
+            except IndexError:
+                logger.warning(f"Could not find variant file for {variant_type}")
+                continue
+
+            self.grouped_variants[variant_type] = self.prepare_data(variant_file)
+            self.parsed_variant_types.append(variant_type)
 
             logger.info(f"{variant_type} data loaded")
 
