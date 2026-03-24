@@ -4,9 +4,9 @@ process MANTA_GERMLINE {
     label 'error_ignore'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/9c/9c9b845679e48cafdfb906243133560f92304fecde584c0cd63b76256da88137/data' :
-        'community.wave.seqera.io/library/manta_tabix_python:542c498668fe537c' }"
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/9c/9c9b845679e48cafdfb906243133560f92304fecde584c0cd63b76256da88137/data'
+        : 'community.wave.seqera.io/library/manta_tabix_python:542c498668fe537c'}"
 
     input:
     tuple path(bam_files), path(bai_files), val(region)
