@@ -24,6 +24,7 @@ workflow VARIANT_CALLING {
 
     take:
     ch_reads
+    ch_bam
     ch_design_file
     ch_genome
 
@@ -54,6 +55,7 @@ workflow VARIANT_CALLING {
 
     MAPPING_MARK_DUPLICATES(
         ch_reads,
+        ch_bam,
         ch_genome_fai_dict
     )
 

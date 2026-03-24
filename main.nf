@@ -29,6 +29,7 @@ workflow NF_VARIANT_CALLING {
 
     take:
     reads
+    bam
     design_file
     genome      // channel: genome file read in from --genome
 
@@ -39,6 +40,7 @@ workflow NF_VARIANT_CALLING {
     //
     VARIANT_CALLING (
         reads,
+        bam,
         design_file,
         genome
     )
@@ -72,6 +74,7 @@ workflow {
     //
     NF_VARIANT_CALLING (
         PIPELINE_INITIALISATION.out.reads,
+        PIPELINE_INITIALISATION.out.bam,
         PIPELINE_INITIALISATION.out.design_file,
         PIPELINE_INITIALISATION.out.genome
     )

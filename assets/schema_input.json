@@ -50,8 +50,14 @@
                         "maxLength": 0
                     }
                 ]
+            },
+            "bam": {
+                "type": "string",
+                "pattern": "^\\S+\\.bam$",
+                "format": "file-path",
+                "errorMessage": "BAM cannot contain spaces and must have extension '.bam'"
             }
         },
-        "required": ["sample", "population", "phenotype", "lane", "fastq_1"]
+        "required": ["sample", "population", "phenotype"]
     }
 }

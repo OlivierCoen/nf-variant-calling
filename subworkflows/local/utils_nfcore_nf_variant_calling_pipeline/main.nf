@@ -65,40 +65,54 @@ workflow PIPELINE_INITIALISATION {
     // Create channel from input file provided through params.input
     //
 
-    ch_samplesheet = channel
-                        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-                        .map {
-                            meta, fastq_1, fastq_2 ->
-                                if (!fastq_2) {
-                                    return [ meta, [ fastq_1 ] ]
-                                } else {
-                                    return [ meta, [ fastq_1, fastq_2 ] ]
-                                }
-                        }
+    ch_samplesheet = channel.fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
 
     ch_reads = ch_samplesheet
-                    .map{
-                        meta, reads ->
-                            // giving a unique lane number if not provided
-                            def lane = meta.lane ?: reads[0].baseName
-                            [ [ id: meta.id, lane: lane ], reads ]
-                    }
+                .map {
+                    meta, fastq_1, fastq_2, bam ->
+                        if (fastq_1) {
+                            if (bam) {
+                                error("Cannot provide both fastq_1 and bam files for sample ${meta.id}")
+                            }
+                            if (!fastq_2) {
+                                return [ meta, [ fastq_1 ] ]
+                            } else {
+                                return [ meta, [ fastq_1, fastq_2 ] ]
+                            }
+                        }
+
+                }
+
+    ch_bam = ch_samplesheet
+                .map {
+                    meta, fastq_1, fastq_2, bam ->
+                        if (!fastq_1) {
+                            if (!bam) {
+                                error("Bam file not found for sample ${meta.id}")
+                            }
+                            return [ meta, [ bam ] ]
+                        }
+
+                }
+
+    ch_reads = addLaneIfNotExists(ch_reads)
+    ch_bam = addLaneIfNotExists(ch_bam)
 
     ch_design_file = ch_samplesheet
-                    .map{
-                        meta, reads ->
-                            [ sample: meta.id, population: meta.population, phenotype: meta.phenotype ]
-                    }
-                    .unique()
-                    .collectFile(
-                        storeDir: "${params.outdir}",
-                        seed: "sample,population,phenotype",
-                        name: 'design.csv',
-                        sort: true,
-                        newLine: true
-                    ) {
-                        item -> "${item.sample},${item.population},${item.phenotype}"
-                    }
+                        .map{
+                            meta, fastq_1, fastq_2, bam ->
+                                [ sample: meta.id, population: meta.population, phenotype: meta.phenotype ]
+                        }
+                        .unique()
+                        .collectFile(
+                            storeDir: "${params.outdir}",
+                            seed: "sample,population,phenotype",
+                            name: 'design.csv',
+                            sort: true,
+                            newLine: true
+                        ) {
+                            item -> "${item.sample},${item.population},${item.phenotype}"
+                        }
 
     validateInputSamplesheet(ch_samplesheet)
 
@@ -106,6 +120,7 @@ workflow PIPELINE_INITIALISATION {
 
     emit:
     reads       = ch_reads
+    bam         = ch_bam
     design_file = ch_design_file
     genome      = ch_genome
 }
@@ -165,10 +180,10 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputSamplesheet(ch_input){
     ch_input
-        .map { meta, file -> [ "${meta.id}_${meta.lane}", meta, file ] }
+        .map { meta, fastq_1, fastq_2, bam -> [ "${meta.id}_${meta.lane}", meta, fastq_1, fastq_2, bam ] }
         .groupTuple()
-        .map { id, meta, files ->
-            if (files.size() > 1) {
+        .map { id, meta, fastq_1, fastq_2, bam ->
+            if (meta.size() > 1) {
                 error("Multiple files found for sample ${meta[0].id} and lane ${meta[0].lane}. Each line of the samplesheet must contain unique combinations of samples and lanes.")
             }
         }
@@ -238,4 +253,14 @@ def methodsDescriptionText(mqc_methods_yaml) {
     def description_html = engine.createTemplate(methods_text).make(meta)
 
     return description_html.toString()
+}
+
+def addLaneIfNotExists(ch_input) {
+    return ch_input
+                .map{
+                    meta, files ->
+                        // giving a unique lane number if not provided
+                        def lane = meta.lane ?: files instanceof Path ? files.baseName : files[0].baseName
+                        [ [ id: meta.id, lane: lane ], files ]
+                }
 }
