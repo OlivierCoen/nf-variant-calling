@@ -28,7 +28,7 @@ process MANTA_GERMLINE {
     def input_files = bam_files.collect{"--bam ${it}"}.join(' ')
     def config_option = config ? "--config ${config}" : ""
     """
-    echo "${region.chrom}\\t${region.start}\\t${region.end}" > region.bed
+    echo -e "${region.chrom}\\t${region.start}\\t${region.end}" > region.bed
     bgzip -c region.bed > region.bed.gz && tabix -p bed region.bed.gz
     # manta has a bug and searches for region.bed.tbi instead of region.bed.gz.tbi
     mv region.bed.gz.tbi region.bed.tbi
