@@ -20,7 +20,7 @@ process MANTA_GERMLINE {
     tuple val(meta), path("*candidate_sv.vcf.gz.tbi")          , emit: candidate_sv_vcf_tbi, optional: true
     tuple val(meta), path("*diploid_sv.vcf.gz")                , emit: diploid_sv_vcf, optional: true
     tuple val(meta), path("*diploid_sv.vcf.gz.tbi")            , emit: diploid_sv_vcf_tbi, optional: true
-    tuple val("${task.process}"), val('manta'), eval("manta: \$( configManta.py --version )"), topic: versions
+    tuple val("${task.process}"), val('manta'), eval("configManta.py --version"), topic: versions
 
     script:
     def args = task.ext.args ?: ''
