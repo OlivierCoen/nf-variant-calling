@@ -1,6 +1,6 @@
 process BWAMEM2_MEM {
     tag "${meta.id} - ${meta.lane}"
-    label 'process_high'
+    label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
