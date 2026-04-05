@@ -103,6 +103,39 @@
                     "fa_icon": "far fa-stop-circle",
                     "help_text": "List of callers to use, separated by commas. Options: freebayes, gatk, manta, delly"
                 },
+                "biallelic_only": {
+                    "type": "boolean",
+                    "description": "Keep only biallelic variants.",
+                    "default": false,
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Keep only biallelic variants. Provides the parameters `-m 2 -M 2` to `bcftools view`"
+                },
+                "min_quality": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Minimum  variant quality",
+                    "fa_icon": "fas fa-terminal"
+                },
+                "min_overall_depth": {
+                    "type": "integer",
+                    "default": 30,
+                    "description": "Minimum overall depth among samples",
+                    "fa_icon": "fas fa-terminal"
+                },
+                "extra_variant_filters": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Extra variant filters to apply with `bcftools view`",
+                    "fa_icon": "fas fa-terminal",
+                    "help_text": "Do not include INFO/DP and QUAL filters as they are already handled by the `--min_qual` and `--min_overall_depth` parameters. The syntax is accessible at `https://samtools.github.io/bcftools/bcftools.html#expressions`"
+                },
+                "poolseq": {
+                    "type": "boolean",
+                    "description": "PoolSeq mode.",
+                    "default": false,
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "PoolSeq mode. When enabled, provide arguments adapted to pool sequencing data to callers"
+                },
                 "reference_chunksize": {
                     "type": "integer",
                     "default": 1e7,

@@ -68,7 +68,8 @@ workflow VARIANT_CALLING {
         MAPPING_MARK_DUPLICATES.out.bai,
         ch_genome_fai_dict,
         ch_genome_region_file,
-        params.callers
+        params.callers,
+        params.poolseq
     )
 
     // -----------------------------------------------------------------
@@ -86,7 +87,11 @@ workflow VARIANT_CALLING {
     FILTER_VARIANTS(
         ch_vcf_tbi,
         params.min_depth_quantile,
-        params.max_depth_quantile
+        params.max_depth_quantile,
+        params.biallelic_only,
+        params.min_quality,
+        params.min_overall_depth,
+        params.extra_variant_filters
     )
 
     ch_filtered_vcf_tbi = FILTER_VARIANTS.out.vcf_tbi

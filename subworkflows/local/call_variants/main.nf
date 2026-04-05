@@ -11,6 +11,7 @@ workflow CALL_VARIANTS {
     ch_genome_fai_dict
     ch_genome_region_file
     callers
+    poolseq
 
     main:
 
@@ -49,7 +50,8 @@ workflow CALL_VARIANTS {
 
         FREEBAYES (
             ch_all_bam_bai_with_region,
-            ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect()
+            ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
+            poolseq
         )
         ch_freebayes_vcf = FREEBAYES.out.vcf.map{ meta, file -> [ meta + [ caller: "freebayes", type: "snp_indel"], file ] }
         ch_vcf = ch_vcf.mix( ch_freebayes_vcf )

@@ -1,6 +1,5 @@
 include { BCFTOOLS_FILL_TAGS                             } from '../../../modules/local/bcftools/fill_tags'
 include { BCFTOOLS_VIEW as BASE_FILTERING                } from '../../../modules/local/bcftools/view'
-//include { BCFTOOLS_VIEW as ADVANCED_FILTERING            } from '../../../modules/local/bcftools/view'
 include { ADDITIONAL_FILTERING                           } from '../../../modules/local/additional_filtering'
 include { BCFTOOLS_INDEX                                 } from '../../../modules/local/bcftools/index'
 
@@ -12,6 +11,10 @@ workflow FILTER_VARIANTS {
     ch_variants
     min_depth_quantile
     max_depth_quantile
+    biallelic_only
+    min_qual
+    min_overall_depth
+    extra_variant_filters
 
 
     main:
@@ -30,7 +33,11 @@ workflow FILTER_VARIANTS {
     // -----------------------------------------------------------------
 
     BASE_FILTERING (
-        BCFTOOLS_FILL_TAGS.out.bcf.join( ch_tbi )
+        BCFTOOLS_FILL_TAGS.out.bcf.join( ch_tbi ),
+        biallelic_only,
+        min_qual,
+        min_overall_depth,
+        extra_variant_filters
     )
 
     // -----------------------------------------------------------------

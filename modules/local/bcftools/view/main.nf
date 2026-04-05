@@ -9,6 +9,10 @@ process BCFTOOLS_VIEW {
 
     input:
     tuple val(meta), path(vcf), path(tbi)
+    val biallelic_only
+    val min_qual
+    val min_overall_depth
+    val extra_filters
 
     output:
     tuple val(meta), path("${prefix}.vcf.gz"), path("${prefix}.vcf.gz.tbi"),                                                       emit: vcf_tbi
@@ -17,12 +21,19 @@ process BCFTOOLS_VIEW {
     script:
     def args = task.ext.args ?: ""
     prefix = task.ext.prefix ?: "${meta.id}.filtered"
+    def biallelic_args = biallelic_only ? "-m 2 -M 2" : ""
+    def qual_filter = min_qual ? "QUAL>=${min_qual}" : ""
+    def depth_filter = min_overall_depth ? "INFO/DP>=${min_overall_depth}" : ""
+    def filters = [qual_filter, depth_filter, extra_filters].findAll { it }.join(" & ")
+    def filter_args = filters ? "-i '${filters}'" : ""
     """
     bcftools view \\
         --output-type z \\
         --output ${prefix}.vcf.gz \\
         --write-index=tbi \\
         --threads ${task.cpus} \\
+        $biallelic_args \\
+        $filter_args \\
         $args \\
         $vcf
     """

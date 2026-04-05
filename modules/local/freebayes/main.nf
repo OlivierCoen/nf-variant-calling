@@ -11,6 +11,7 @@ process FREEBAYES {
     input:
     tuple path(bam_files), path(bai_files), val(region)
     tuple val(meta), path(fasta), path(fai)
+    val poolseq
 
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
@@ -20,15 +21,22 @@ process FREEBAYES {
     script:
     def args    = task.ext.args   ?: ''
     def prefix  = task.ext.prefix ?: "${meta.id}_${region.chrom}_${region.start}_${region.end}"
+    def poolseq_args = poolseq ? [
+        "--pooled-continuous",
+        "--min-alternate-fraction 0.01",
+        "--min-alternate-count 1"
+        ].join(" ").trim() : ""
     """
     # freebayes uses only 1 core
     # that's why we split the genome in multiple chunks and run freebayes in parallel on these chunks
     freebayes \\
         --fasta-reference ${fasta} \\
-        ${args} \\
         --bam ${bam_files} \\
         --region ${region.chrom}:${region.start}-${region.end} \\
-        --vcf ${prefix}.vcf
+        --vcf ${prefix}.vcf \\
+        --use-best-n-alleles 4 \\
+        ${poolseq_args} \\
+        ${args}
 
     bgzip ${prefix}.vcf
     """
