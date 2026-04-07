@@ -75,7 +75,7 @@ def main():
     RO_lf.sink_parquet(RO_OUTFILE)
     AO_lf.sink_parquet(AO_OUTFILE)
 
-    vcf_lf.select(VCF_COLUMNS_TO_KEEP).sink_parquet(VARIANTS_OUTFILE)
+    vcf_lf.sink_parquet(VARIANTS_OUTFILE)
 
 
 if __name__ == "__main__":
