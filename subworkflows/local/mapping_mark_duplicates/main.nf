@@ -1,7 +1,7 @@
 include { BWAMEM2_INDEX                                             } from '../../../modules/local/bwamem2/index'
 include { BWAMEM2_MEM_MARKDUP                                       } from '../../../modules/local/bwamem2/mem_markdup'
 include { SAMTOOLS_MERGE                                            } from '../../../modules/local/samtools/merge'
-include { GATK4_ADDORREPLACEREADGROUPS                              } from '../../../modules/local/gatk4/addorreplacereadgroups'
+include { PICARD_ADDORREPLACEREADGROUPS                             } from '../../../modules/nf-core/picard/addorreplacereadgroups'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/local/samtools/index'
 include { SAMTOOLS_FLAGSTAT                                         } from '../../../modules/local/samtools/flagstat'
 
@@ -44,7 +44,7 @@ workflow MAPPING_MARK_DUPLICATES {
     // MERGE BY SAMPLE
     // -----------------------------------------------------------------
 
-    ch_grouped_bams = GATK4_ADDORREPLACEREADGROUPS.out.bam
+    ch_grouped_bams = PICARD_ADDORREPLACEREADGROUPS.out.bam
                         .map { meta, file -> [ [id: meta.id], file ] } // removing lane info
                         .groupTuple()
 

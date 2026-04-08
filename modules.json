@@ -9,6 +9,11 @@
                         "branch": "master",
                         "git_sha": "80cba9452fb1e9bb79884976fa1ca0e671949aa2",
                         "installed_by": ["modules"]
+                    },
+                    "picard/addorreplacereadgroups": {
+                        "branch": "master",
+                        "git_sha": "4e3e10e502ec6ab6b1c4b4fecd923ff1fa287338",
+                        "installed_by": ["modules"]
                     }
                 }
             },
