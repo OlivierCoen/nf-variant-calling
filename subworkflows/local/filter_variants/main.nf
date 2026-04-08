@@ -13,7 +13,6 @@ workflow FILTER_VARIANTS {
     max_depth_quantile
     biallelic_only
     min_qual
-    min_overall_depth
     extra_variant_filters
 
 
@@ -36,7 +35,6 @@ workflow FILTER_VARIANTS {
         BCFTOOLS_FILL_TAGS.out.bcf.join( ch_tbi ),
         biallelic_only,
         min_qual,
-        min_overall_depth,
         extra_variant_filters
     )
 

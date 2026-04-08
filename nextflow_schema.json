@@ -116,12 +116,6 @@
                     "description": "Minimum  variant quality",
                     "fa_icon": "fas fa-terminal"
                 },
-                "min_overall_depth": {
-                    "type": "integer",
-                    "default": 30,
-                    "description": "Minimum overall depth among samples",
-                    "fa_icon": "fas fa-terminal"
-                },
                 "extra_variant_filters": {
                     "type": "string",
                     "default": "",

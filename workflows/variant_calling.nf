@@ -36,9 +36,8 @@ workflow VARIANT_CALLING {
         params.ratio_overlap_to_chunksize
     )
 
-    ch_genome_fai_dict = ch_genome
-                            .join( GENOME_PREPARATION.out.fai )
-                            .join( GENOME_PREPARATION.out.dict )
+    ch_genome_fai = ch_genome
+                        .join( GENOME_PREPARATION.out.fai )
 
     ch_genome_region_file = GENOME_PREPARATION.out.region_file
 
@@ -56,7 +55,7 @@ workflow VARIANT_CALLING {
     MAPPING_MARK_DUPLICATES(
         ch_reads,
         ch_bam,
-        ch_genome_fai_dict
+        ch_genome_fai
     )
 
     /// -----------------------------------------------------------------
@@ -66,7 +65,7 @@ workflow VARIANT_CALLING {
     CALL_VARIANTS(
         MAPPING_MARK_DUPLICATES.out.bam,
         MAPPING_MARK_DUPLICATES.out.bai,
-        ch_genome_fai_dict,
+        ch_genome_fai,
         ch_genome_region_file,
         params.callers,
         params.poolseq
@@ -90,7 +89,6 @@ workflow VARIANT_CALLING {
         params.max_depth_quantile,
         params.biallelic_only,
         params.min_quality,
-        params.min_overall_depth,
         params.extra_variant_filters
     )
 
@@ -102,7 +100,7 @@ workflow VARIANT_CALLING {
 
     DESCRIPTIVE_STATISTICS (
         ch_filtered_vcf_tbi,
-        ch_genome_fai_dict
+        ch_genome_fai
     )
 
     // -----------------------------------------------------------------
@@ -128,7 +126,7 @@ workflow VARIANT_CALLING {
         ch_vcf_tbi,
         ch_variants,
         ch_grouped_variants,
-        ch_genome_fai_dict,
+        ch_genome_fai,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

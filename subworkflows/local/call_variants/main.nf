@@ -8,7 +8,7 @@ workflow CALL_VARIANTS {
     take:
     ch_bam
     ch_bai
-    ch_genome_fai_dict
+    ch_genome_fai
     ch_genome_region_file
     callers
     poolseq
@@ -50,7 +50,7 @@ workflow CALL_VARIANTS {
 
         FREEBAYES (
             ch_all_bam_bai_with_region,
-            ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
+            ch_genome_fai.collect(),
             poolseq
         )
         ch_freebayes_vcf = FREEBAYES.out.vcf.map{ meta, file -> [ meta + [ caller: "freebayes", type: "snp_indel"], file ] }
@@ -66,7 +66,7 @@ workflow CALL_VARIANTS {
 
         DELLY_CALL(
             ch_all_bam_bai_with_region,
-            ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
+            ch_genome_fai.collect(),
             ch_genome_region_file.collect()
         )
         ch_delly_vcf = DELLY_CALL.out.vcf
@@ -83,7 +83,7 @@ workflow CALL_VARIANTS {
 
         MANTA_GERMLINE(
             ch_all_bam_bai_with_region,
-            ch_genome_fai_dict.map{ meta, fasta, fai, dict -> [ meta, fasta, fai ] }.collect(),
+            ch_genome_fai.collect(),
             []
         )
         //ch_manta_small_indel_vcf = MANTA_GERMLINE.out.candidate_small_indels_vcf.map{ meta, file -> [ meta + [ caller: "manta", type: "sv"], file ] }

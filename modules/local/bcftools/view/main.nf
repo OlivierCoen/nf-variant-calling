@@ -11,7 +11,6 @@ process BCFTOOLS_VIEW {
     tuple val(meta), path(vcf), path(tbi)
     val biallelic_only
     val min_qual
-    val min_overall_depth
     val extra_filters
 
     output:
@@ -23,8 +22,7 @@ process BCFTOOLS_VIEW {
     prefix = task.ext.prefix ?: "${meta.id}.filtered"
     def biallelic_args = biallelic_only ? "-m 2 -M 2" : ""
     def qual_filter = min_qual ? "QUAL>=${min_qual}" : ""
-    def depth_filter = min_overall_depth ? "INFO/DP>=${min_overall_depth}" : ""
-    def filters = [qual_filter, depth_filter, extra_filters].findAll { it }.join(" & ")
+    def filters = [qual_filter, extra_filters].findAll { it }.join(" & ")
     def filter_args = filters ? "-i '${filters}'" : ""
     """
     bcftools view \\

@@ -20,7 +20,7 @@ workflow REPORTING {
     ch_vcf_tbi
     ch_variants
     ch_grouped_variants
-    ch_genome_fai_dict
+    ch_genome_fai
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -44,7 +44,7 @@ workflow REPORTING {
 
     EVALUATE_EFFECT_OF_FILTERS(
         ch_input,
-        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, fai ] }.collect()
+        ch_genome_fai.map { meta, genome, fai -> [ meta, fai ] }.collect()
     )
 
     // -----------------------------------------------------------------

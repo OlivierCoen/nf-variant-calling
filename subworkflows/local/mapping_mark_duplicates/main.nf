@@ -12,7 +12,7 @@ workflow MAPPING_MARK_DUPLICATES {
     take:
     ch_reads
     ch_bam
-    ch_genome_fai_dict
+    ch_genome_fai
 
     main:
 
@@ -21,23 +21,23 @@ workflow MAPPING_MARK_DUPLICATES {
     // -----------------------------------------------------------------
 
     BWAMEM2_INDEX (
-        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, genome ] }
+        ch_genome_fai.map { meta, genome, fai -> [ meta, genome ] }
     )
 
-    BWAMEM2_MEM (
+    BWAMEM2_MEM_MARKDUP (
         ch_reads,
         BWAMEM2_INDEX.out.index.collect()
     )
 
-    ch_all_bam = ch_bam.mix( BWAMEM2_MEM.out.bam )
+    ch_all_bam = ch_bam.mix( BWAMEM2_MEM_MARKDUP.out.bam )
 
     // -----------------------------------------------------------------
     // ADD READ GROUP IN HEADER
     // -----------------------------------------------------------------
 
-    GATK4_ADDORREPLACEREADGROUPS (
+    PICARD_ADDORREPLACEREADGROUPS (
         ch_all_bam,
-        ch_genome_fai_dict.map { meta, genome, fai, dict -> [ meta, genome, fai ] }.collect()
+        ch_genome_fai.collect()
     )
 
     // -----------------------------------------------------------------
