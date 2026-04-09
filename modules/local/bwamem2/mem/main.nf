@@ -1,4 +1,4 @@
-process BWAMEM2_MEM_MARKDUP {
+process BWAMEM2_MEM {
     tag "${meta.id} - ${meta.lane}"
     label 'process_medium'
 
@@ -15,16 +15,13 @@ process BWAMEM2_MEM_MARKDUP {
     tuple val(meta), path("*.bam"), emit: bam
     tuple val("${task.process}"), val('bwamem2'),    eval("bwa-mem2 version 2>&1 | tail -1 | sed 's/.* //'"),                  topic: versions
     tuple val("${task.process}"), val('samtools'),   eval("samtools --version | sed '1!d; s/samtools //'"),                    topic: versions
-    tuple val("${task.process}"), val('samblaster'), eval("samblaster -h 2>&1 | head -n 1 | sed 's/^samblaster: Version //'"), topic: versions
 
 
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def args3 = task.ext.args3 ?: ''
-    def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}_${meta.lane}"
-
     """
     INDEX=`find -L ./ -name "*.amb" | sed 's/\\.amb\$//'`
 
@@ -34,9 +31,8 @@ process BWAMEM2_MEM_MARKDUP {
         -t $task.cpus \\
         \$INDEX \\
         $reads \\
-        | samblaster $args2 \\
-        | samtools view -Sb -@ $task.cpus $args3 - \\
-        | samtools sort $args4 -@ $task.cpus -o ${prefix}.bam -
+        | samtools view -b -@ $task.cpus $args2 - \\
+        | samtools sort $args3 -@ $task.cpus -o ${prefix}.bam -
 
     """
 
