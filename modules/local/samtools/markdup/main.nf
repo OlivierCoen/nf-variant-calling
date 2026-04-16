@@ -23,10 +23,11 @@ process SAMTOOLS_MARKDUP {
     def args4 = task.ext.args4 ?: ''
     def prefix = "${input_bam.baseName}.markdup"
     """
-    samtools collate ${args} -@ ${task.cpus-1} -O -u $input_bam \\
+    mkdir -p tmp
+    samtools collate -T tmp/collate ${args} -@ ${task.cpus-1} -O -u $input_bam \\
         | samtools fixmate ${args2} -@ ${task.cpus-1} -m -u - - \\
-        | samtools sort ${args3} -@ ${task.cpus-1} -u - \\
-        | samtools markdup ${args4} -@ ${task.cpus-1} -T $prefix -s - ${prefix}.bam \\
+        | samtools sort -T tmp/sort ${args3} -@ ${task.cpus-1} -u - \\
+        | samtools markdup ${args4} -@ ${task.cpus-1} -T $prefix/markdup -s - ${prefix}.bam \\
         2> ${prefix}.markdup.log
     """
 }
