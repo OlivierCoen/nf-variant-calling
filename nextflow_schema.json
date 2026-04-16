@@ -80,14 +80,13 @@
             "fa_icon": "fas fa-terminal",
             "description": "Options for mapping and marking duplicates.",
             "properties": {
-                "markdup_method": {
-                    "type": "string",
-                    "enum": ["gatk", "samtools"],
-                    "default": "gatk",
-                    "description": "Method to use for marking duplicates.",
-                    "fa_icon": "fas fa-terminal",
-                    "help_text": "Method to use for marking duplicates."
-                }
+              "nb_seqs_fastq_chunks": {
+                  "type": "integer",
+                  "default": 10,
+                  "description": "Number of sequences per FASTQ chunk.",
+                  "fa_icon": "fas fa-terminal",
+                  "help_text": "Number of sequences to keep in each FASTQ chunk before proceeding to mapping."
+              }
             }
         },
         "variant_calling_options": {

@@ -1,6 +1,6 @@
 process BWAMEM2_MEM {
     tag "${meta.id} - ${meta.lane}"
-    label 'process_high'
+    label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
@@ -13,8 +13,8 @@ process BWAMEM2_MEM {
 
     output:
     tuple val(meta), path("*.bam"), emit: bam
-    tuple val("${task.process}"), val('bwamem2'),    eval("bwa-mem2 version 2>&1 | tail -1 | sed 's/.* //'"),                  topic: versions
-    tuple val("${task.process}"), val('samtools'),   eval("samtools --version | sed '1!d; s/samtools //'"),                    topic: versions
+    tuple val("${task.process}"), val('bwamem2'),  eval("bwa-mem2 version 2>&1 | tail -1 | sed 's/.* //'"), topic: versions
+    tuple val("${task.process}"), val('samtools'), eval("samtools --version | sed '1!d; s/samtools //'"), topic: versions
 
 
     script:

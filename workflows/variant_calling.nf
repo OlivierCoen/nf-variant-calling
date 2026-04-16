@@ -55,7 +55,8 @@ workflow VARIANT_CALLING {
     MAPPING_MARK_DUPLICATES(
         ch_reads,
         ch_bam,
-        ch_genome_fai
+        ch_genome_fai,
+        params.nb_seqs_fastq_chunks
     )
 
     /// -----------------------------------------------------------------
