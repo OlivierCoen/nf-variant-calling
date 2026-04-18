@@ -1,0 +1,13 @@
+sample,lane,population,sub_population,genotype,phenotype,fastq_1,fastq_2,bam
+CO25_f10,22LLYKLT4_L1,CO25,f10,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/CO25_f10_22LLYKLT4_L1.bam
+CO25_f15,22LLYKLT4_L7,CO25,f15,Y+,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/CO25_f15_22LLYKLT4_L7.bam
+N39,22LLYKLT4_L7,NasW,39,YY,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/N39_22LLYKLT4_L7.bam
+N40,22LLYKLT4_L1,NasW,40,YY,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/N40_22LLYKLT4_L1.bam
+N47,22LLYKLT4_L7,NasW,47,YY,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/N47_22LLYKLT4_L7.bam
+PO15_f01,22LLYKLT4_L7,PO15,f01,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO15_f01_22LLYKLT4_L7.bam
+PO22_f03,22LLYKLT4_L2,PO22,f03,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO22_f03_22LLYKLT4_L2.bam
+PO22_f04,22LLYKLT4_L1,PO22,f04,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO22_f04_22LLYKLT4_L1.bam
+PO22_f08,22LLYKLT4_L7,PO22,f08,Y+,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO22_f08.bam
+PO22_f11,22LLYKLT4_L7,PO22,f11,Y+,R,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO22_f11_22LLYKLT4_L7.bam
+PO22_f12,22LLYKLT4_L7,PO22,f12,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO22_f12_22LLYKLT4_L7.bam
+PO8_f02,22LLYKLT4_L7,PO8,f02,XX,NR,,,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individual_bams/PO8_f02_22LLYKLT4_L7.bam

@@ -1,0 +1,2 @@
+sample,lane,population,sub_population,genotype,phenotype,fastq_1,fastq_2
+PO22_f08,22LLYKLT4_L7,PO22,f08,Y+,R,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individuals/PO22_f08_MKDN250000844-1A_22LLYKLT4_L7_1.fq.gz,/shared/projects/resist_anasatum_sex_ratio_nanopore/variant_calling/input/data/individuals/PO22_f08_MKDN250000844-1A_22LLYKLT4_L7_2.fq.gz

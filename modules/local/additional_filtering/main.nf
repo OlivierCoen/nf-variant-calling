@@ -1,7 +1,7 @@
 process ADDITIONAL_FILTERING {
 
     tag "${meta.id} - ${meta.type}"
-    label 'process_medium'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
