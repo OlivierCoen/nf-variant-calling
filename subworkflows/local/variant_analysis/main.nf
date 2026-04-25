@@ -1,5 +1,5 @@
 include { SEPARATE_VCF_DATA                             } from '../../../modules/local/separate_vcf_data'
-include { CMH_TEST                                      } from '../../../modules/local/cmh_test'
+include { STATISTICAL_TEST                              } from '../../../modules/local/statistical_test'
 include { AGGREGATE_DATA                                } from '../../../modules/local/aggregate_data'
 
 
@@ -9,6 +9,7 @@ workflow VARIANT_ANALYSIS {
     take:
     ch_vcf
     ch_design_file
+    poolseq
     window_size
 
     main:
@@ -24,12 +25,13 @@ workflow VARIANT_ANALYSIS {
     ch_alt_counts = SEPARATE_VCF_DATA.out.alt_counts
 
     // -----------------------------------------------------------------
-    // COMPUTE cochran mantel haenszel TEST
+    // COMPUTE STATISTICAL TEST
     // -----------------------------------------------------------------
 
-    CMH_TEST(
+    STATISTICAL_TEST(
         ch_ref_counts.join( ch_alt_counts ),
-        ch_design_file.collect()
+        ch_design_file.collect(),
+        poolseq
     )
 
     // -----------------------------------------------------------------
@@ -37,7 +39,7 @@ workflow VARIANT_ANALYSIS {
     // -----------------------------------------------------------------
 
     AGGREGATE_DATA(
-        ch_variants.join( CMH_TEST.out.pvalues ).join( ch_ref_counts ).join( ch_alt_counts ),
+        ch_variants.join( STATISTICAL_TEST.out.pvalues ).join( ch_ref_counts ).join( ch_alt_counts ),
         ch_design_file.collect(),
         window_size
 

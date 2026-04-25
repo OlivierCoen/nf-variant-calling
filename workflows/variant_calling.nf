@@ -111,6 +111,7 @@ workflow VARIANT_CALLING {
     VARIANT_ANALYSIS (
         ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> [ meta, vcf ] },
         ch_design_file,
+        params.poolseq,
         params.window_size
     )
 

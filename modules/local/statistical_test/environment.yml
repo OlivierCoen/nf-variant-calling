@@ -8,3 +8,4 @@ dependencies:
   - conda-forge::r-optparse==1.7.5
   - conda-forge::r-dplyr==1.2.0
   - conda-forge::r-arrow==23.0.0
+  - conda-forge::r-argparse==2.3.1

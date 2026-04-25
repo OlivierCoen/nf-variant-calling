@@ -1,4 +1,4 @@
-process CMH_TEST {
+process STATISTICAL_TEST {
 
     tag "${meta.id} - ${meta.type}"
     label 'process_high'
@@ -11,6 +11,7 @@ process CMH_TEST {
     input:
     tuple val(meta), path(reference_count_file), path(alternative_count_file)
     path design
+    val is_poolseq
 
     output:
     tuple val(meta), path("*.cmh_pvalues.txt"),                                                                    emit: pvalues
@@ -19,8 +20,14 @@ process CMH_TEST {
 
     script:
     prefix   = task.ext.prefix ?: "${meta.id}"
+    if ( is_poolseq ) {
+        method = "cmh"
+    } else {
+        method = "fet"
+    }
     """
-    compute_cmh_test.R \\
+    compute_statistical_test.R \\
+        --method $method \\
         --RO $reference_count_file \\
         --AO $alternative_count_file \\
         --design $design \\

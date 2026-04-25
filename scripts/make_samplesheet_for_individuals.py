@@ -5,8 +5,22 @@ from pathlib import Path
 import pandas as pd
 
 FOLDER_PATTERN = "X204SC24107022-Z01-F001"
-FILE_PREFIXED_TO_INCLUDE = ["CO25_f10", "CO25_f15", "N39", "N40", "N47", "PO8_f02", "PO15_f01", "PO22_f03", "PO22_f04", "PO22_f08", "PO22_f11", "PO22_f12"]
-OUTFILE = "samplesheet.individuals.csv"
+FILE_PREFIXED_TO_INCLUDE = [
+    "CO25_f10",
+    "CO25_f15",
+    "N39",
+    "N40",
+    "N47",
+    "PO8_f02",
+    "PO15_f01",
+    "PO22_f03",
+    "PO22_f04",
+    "PO22_f08",
+    "PO22_f11",
+    "PO22_f12",
+]
+SAMPLESHEET_OUTFILE = "samplesheet.individuals.csv"
+LIST_OUTFILE = "list_of_fastq_files.individuals.txt"
 
 folders = Path().cwd().glob(f"{FOLDER_PATTERN}_*")
 
@@ -80,4 +94,9 @@ final_df = (
 print(final_df)
 
 print("\nWriting samplesheet file...")
-final_df.to_csv(OUTFILE, index=False, header=True)
+final_df.to_csv(SAMPLESHEET_OUTFILE, index=False, header=True)
+
+print("\nWriting list of fastq files...")
+with open(LIST_OUTFILE, "w") as f:
+    for file in fastq_files:
+        f.write(f"{str(file)}\n")
