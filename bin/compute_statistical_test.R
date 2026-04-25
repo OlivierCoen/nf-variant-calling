@@ -171,11 +171,18 @@ main <- function() {
     sample_lists <- get_sample_lists(design)
     
     for (i in seq_along(sample_lists)) {
-      message(paste("Samples for phenotype", i, ":", sample_lists[[i]]))
+      message(paste("Samples for phenotype", i, ": "), paste(sample_lists[[i]], collapse = ", "))
     }
   
     RO_dataset <- arrow::open_dataset(args$RO_file)
     AO_dataset <- arrow::open_dataset(args$AO_file)
+    
+    RO_nrows <- nrow(RO_dataset)
+    AO_nrows <- nrow(AO_dataset)
+    if (RO_nrows != AO_nrows) {
+      error("RO and AO datasets have different number of rows.")
+    }
+    message(paste("RO dataset has", RO_nrows, "rows."))
     
     # Process in chunks using Scanner
     RO_scanner <- arrow::Scanner$create(RO_dataset, batch_size = CHUNK_SIZE)
@@ -225,10 +232,10 @@ main <- function() {
         } else { 
           error(paste("Method not recognised:", args$method))
         }
-        print(p_values)
+        
         all_pvalues <- c(all_pvalues, p_values)
         i <- i + 1
-        message(paste(CHUNK_SIZE, "rows processed. Chunk", i, "done."))
+        message(paste(nrow(RO), "rows processed. Chunk", i, "done."))
       
       }
   

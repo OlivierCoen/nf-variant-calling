@@ -5,8 +5,8 @@ process STATISTICAL_TEST {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d4/d4b80bd5b40fee28c0f8cd46b6ff34b3b6fc20817100885eb17eeff983212158/data':
-        'community.wave.seqera.io/library/r-arrow_r-base_r-dplyr_r-optparse:1a195200b90bdbf0' }"
+        '':
+        '' }"
 
     input:
     tuple val(meta), path(reference_count_file), path(alternative_count_file)
