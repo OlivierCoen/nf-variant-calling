@@ -9,7 +9,7 @@ workflow VARIANT_ANALYSIS {
     take:
     ch_vcf
     ch_design_file
-    poolseq
+    statistical_test
     window_size
 
     main:
@@ -31,7 +31,7 @@ workflow VARIANT_ANALYSIS {
     STATISTICAL_TEST(
         ch_ref_counts.join( ch_alt_counts ),
         ch_design_file.collect(),
-        poolseq
+        statistical_test
     )
 
     // -----------------------------------------------------------------
@@ -39,8 +39,7 @@ workflow VARIANT_ANALYSIS {
     // -----------------------------------------------------------------
 
     AGGREGATE_DATA(
-        ch_variants.join( STATISTICAL_TEST.out.pvalues ).join( ch_ref_counts ).join( ch_alt_counts ),
-        ch_design_file.collect(),
+        ch_vcf.join( STATISTICAL_TEST.out.pvalues ),
         window_size
 
     )

@@ -169,6 +169,20 @@
                 }
             }
         },
+        "variant_analysis_options": {
+            "title": "Variant analysis options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Options for variant statistical analysis.",
+            "properties": {
+                "statistical_test": {
+                    "type": "string",
+                    "enum": ["cmh", "fet", "chisq"],
+                    "description": "Statistical test to use for variant analysis. cmh: Cochran-Mantel-Haenszel; fet: Fisher's Exact Test; chisq: Chi-squared test.",
+                    "fa_icon": "fas fa-terminal"
+                }
+            }
+        },
         "reporting_options": {
             "title": "Reporting options",
             "type": "object",
@@ -338,6 +352,9 @@
         },
         {
             "$ref": "#/$defs/variant_filtering_options"
+        },
+        {
+            "$ref": "#/$defs/variant_analysis_options"
         },
         {
             "$ref": "#/$defs/reporting_options"

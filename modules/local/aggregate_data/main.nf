@@ -9,8 +9,7 @@ process AGGREGATE_DATA {
         'community.wave.seqera.io/library/polars_python_tqdm:ca595df92ae9b061' }"
 
     input:
-    tuple val(meta), path(variant_file), path(pvalue_file), path(ref_counts), path(alt_counts)
-    path(design_file)
+    tuple val(meta), path(vcf), path(pvalue_file)
     val(window_size)
 
     output:
@@ -27,12 +26,9 @@ process AGGREGATE_DATA {
     export POLARS_MAX_THREADS=${task.cpus}
 
     aggregate_data.py \\
-        --variants $variant_file \\
-        --RO $ref_counts \\
-        --AO $alt_counts \\
-        --design $design_file \\
-        --prefix ${prefix} \\
+        --vcf $vcf \\
         --pvalues $pvalue_file \\
+        --prefix ${prefix} \\
         --window-size $window_size
     """
 

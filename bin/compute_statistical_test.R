@@ -12,6 +12,7 @@ library(arrow)
 
 options(error = traceback)
 
+CHUNK_SIZE <- 1000000
 NB_MONTE_CARLO_SIMULATIONS <- 10000
 
 
@@ -106,9 +107,6 @@ compute_test <- function(mathod, R0, A0, sample_lists) {
 
         if (any(is.na(mat)) || sum(mat) == 0) return(NA_real_)
         
-        # add pseudocount to avoid zeroes (TODO: see how to improve that)
-        mat  = mat + 1
-        
         if (mathod == "fet") {
           p_value <- compute_fet_from_contingency(mat)
         } else if (mathod == "chisq") {
@@ -167,9 +165,7 @@ compute_cochran_mantel_haenszel_test <- function(R0, R1, A0, A1, correct = TRUE)
 main <- function() {
 
     args <- get_args()
-  
-    RO <- arrow::read_parquet(args$RO_file, as_tibble=FALSE)
-    AO <- arrow::read_parquet(args$AO_file, as_tibble=FALSE)
+    
     design <- read.csv(args$design_file)
 
     sample_lists <- get_sample_lists(design)
@@ -177,38 +173,68 @@ main <- function() {
     for (i in seq_along(sample_lists)) {
       message(paste("Samples for phenotype", i, ":", sample_lists[[i]]))
     }
-
-    RO <- cast_to_numeric(RO)
-    AO <- cast_to_numeric(AO)
+  
+    RO_dataset <- arrow::open_dataset(args$RO_file)
+    AO_dataset <- arrow::open_dataset(args$AO_file)
     
-    if ( args$method == "cmh" ) {
+    # Process in chunks using Scanner
+    RO_scanner <- arrow::Scanner$create(RO_dataset, batch_size = CHUNK_SIZE)
+    AO_scanner <- arrow::Scanner$create(AO_dataset, batch_size = CHUNK_SIZE)
+    
+    RO_batches <- RO_scanner$ToRecordBatchReader()
+    AO_batches <- AO_scanner$ToRecordBatchReader()
+    
+    all_pvalues <- c()
+    i <- 0
+    while (TRUE) {
       
-        if (length(sample_lists) != 2) {
-            message("Exactly two phenotypes needed here!")
-            quit(save = "no", status = 1)
+        RO <- RO_batches$read_next_batch()
+        AO <- AO_batches$read_next_batch()
+        
+        if (is.null(RO)) {
+          if ( !is.null(AO) ) {
+            error("RO is NULL but AO is not.")
+          }
+          break
         }
-        samples_pheno_1 <- sample_lists[[1]]
-        samples_pheno_2 <- sample_lists[[2]]
         
-        p_values <- compute_cochran_mantel_haenszel_test(
-          R0 = RO[,samples_pheno_1],
-          R1 = RO[,samples_pheno_2],
-          A0 = AO[,samples_pheno_1],
-          A1 = AO[,samples_pheno_2],
-          correct = TRUE
-        )
+        RO <- cast_to_numeric(as.data.frame(RO))
+        AO <- cast_to_numeric(as.data.frame(AO))
         
-    } else if ( args$method %in% c("fet", "chisq") ) {
+        if ( args$method == "cmh" ) {
+          
+            if (length(sample_lists) != 2) {
+                message("Exactly two phenotypes needed here!")
+                quit(save = "no", status = 1)
+            }
+            samples_pheno_1 <- sample_lists[[1]]
+            samples_pheno_2 <- sample_lists[[2]]
+            
+            p_values <- compute_cochran_mantel_haenszel_test(
+              R0 = RO[,samples_pheno_1],
+              R1 = RO[,samples_pheno_2],
+              A0 = AO[,samples_pheno_1],
+              A1 = AO[,samples_pheno_2],
+              correct = TRUE
+            )
+            
+        } else if ( args$method %in% c("fet", "chisq") ) {
+          
+          p_values <- compute_test(args$method, RO, AO, sample_lists)
+          
+        } else { 
+          error(paste("Method not recognised:", args$method))
+        }
+        print(p_values)
+        all_pvalues <- c(all_pvalues, p_values)
+        i <- i + 1
+        message(paste(CHUNK_SIZE, "rows processed. Chunk", i, "done."))
       
-      p_values <- compute_test(args$method, RO, AO, sample_lists)
+      }
+  
+      all_pvalues <- p.adjust(all_pvalues, method = "fdr")
       
-    } else { 
-      error(paste("Method not recognised:", args$method))
-    }
-
-    p_values <- p.adjust(p_values, method = "fdr")
-    
-    write.table(p_values, file = args$output_file, row.names = FALSE, col.names = FALSE)
+      write.table(all_pvalues, file = args$output_file, row.names = FALSE, col.names = FALSE)
 }
 
 

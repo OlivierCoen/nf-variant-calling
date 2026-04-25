@@ -11,7 +11,7 @@ process STATISTICAL_TEST {
     input:
     tuple val(meta), path(reference_count_file), path(alternative_count_file)
     path design
-    val is_poolseq
+    val statistical_test
 
     output:
     tuple val(meta), path("*.cmh_pvalues.txt"),                                                                    emit: pvalues
@@ -20,14 +20,9 @@ process STATISTICAL_TEST {
 
     script:
     prefix   = task.ext.prefix ?: "${meta.id}"
-    if ( is_poolseq ) {
-        method = "cmh"
-    } else {
-        method = "fet"
-    }
     """
     compute_statistical_test.R \\
-        --method $method \\
+        --method $statistical_test \\
         --RO $reference_count_file \\
         --AO $alternative_count_file \\
         --design $design \\

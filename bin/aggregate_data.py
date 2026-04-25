@@ -83,7 +83,9 @@ def format_count_per_sample(sample_cols: list[str]):
                 pl.col(ad_col).is_not_null()
             ).then(
                 pl.col(ad_col).list.join(" / ")
-            ).otherwise(pl.lit(""))tuple val("${task.process}"), val('python'),       eval("python3 --version | sed 's/Python //'"),                         topic: versions
+            ).otherwise(
+                pl.lit("")
+            )
             + pl.lit("<br>")
         )
     yield expr.alias("allele_counts")
