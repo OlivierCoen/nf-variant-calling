@@ -12,7 +12,7 @@ library(arrow)
 
 options(error = traceback)
 
-CHUNK_SIZE <- 1000000
+CHUNK_SIZE <- 100000
 NB_MONTE_CARLO_SIMULATIONS <- 10000
 
 
@@ -193,6 +193,7 @@ main <- function() {
     
     all_pvalues <- c()
     i <- 0
+    total_processed_rows <- 0
     while (TRUE) {
       
         RO <- RO_batches$read_next_batch()
@@ -235,7 +236,9 @@ main <- function() {
         
         all_pvalues <- c(all_pvalues, p_values)
         i <- i + 1
-        message(paste(nrow(RO), "rows processed. Chunk", i, "done."))
+        total_processed_rows <- total_processed_rows + nrow(RO)
+        pct_done <- 100 * total_processed_rows / RO_nrows
+        message(paste0("Chunk ", i, " done. ", total_processed_rows, " rows processed (",  format(round(pct_done, 2), nsmall = 2), "% of total)."))
       
       }
   
