@@ -75,7 +75,7 @@ compute_chisq_from_contingency <- function(mat) {
 }
 
 
-compute_test <- function(mathod, R0, A0, sample_lists) {
+compute_test <- function(method, R0, A0, sample_lists) {
     # matrices [n_snp × n_pop]
     # Apply stat test row-wise (per SNP), aggregating across populations
 
@@ -99,7 +99,7 @@ compute_test <- function(mathod, R0, A0, sample_lists) {
           mat_elements[[pheno]] <- c(ref_pheno, alt_pheno)
         }
         mat <- matrix(unlist(mat_elements), nrow = 2)
-        
+        #print(mat)
         # Example for a 2x2 contingency table:
         #               pheno 1            pheno 2
         # ref allele    r[[pheno1]]        r[[pheno2]]
@@ -107,11 +107,17 @@ compute_test <- function(mathod, R0, A0, sample_lists) {
 
         if (any(is.na(mat)) || sum(mat) == 0) return(NA_real_)
         
-        if (mathod == "fet") {
-          p_value <- compute_fet_from_contingency(mat)
-        } else if (mathod == "chisq") {
-          p_value <- compute_chisq_from_contingency(mat)
-        }
+        p_value <- tryCatch({
+          if (method == "fet") {
+              compute_fet_from_contingency(mat)
+          } else if (method == "chisq") {
+            compute_chisq_from_contingency(mat)
+          }
+        }, error = function(e) {
+          #warning("Error with matrix:")
+          #print(mat)
+          return(NA_real_)
+        })
         
         p_value
         
