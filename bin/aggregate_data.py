@@ -46,6 +46,13 @@ def parse_args():
         help="Path to file containing p-values",
     )
     parser.add_argument(
+        "--design",
+        type=Path,
+        dest="design_file",
+        required=True,
+        help="Path to design",
+    )
+    parser.add_argument(
         "--prefix",
         required=True,
         help="Prefix for output files",
@@ -73,21 +80,23 @@ def add_windows(lf: pl.LazyFrame, window_size: int) -> pl.LazyFrame:
     )
 
 
-def format_count_per_sample(sample_cols: list[str]):
+def format_count_per_sample(phenotype_to_samples: dict):
     expr = ( pl.lit("Counts (REF / ALT / ...):<br>") )
-    for sample in sample_cols:
-        ad_col = f"{sample}_AD"
-        expr += (
-            pl.lit(f"{sample}: ")
-            + pl.when(
-                pl.col(ad_col).is_not_null()
-            ).then(
-                pl.col(ad_col).list.join(" / ")
-            ).otherwise(
-                pl.lit("")
+    for phenotype, samples in phenotype_to_samples.items():
+        expr += (pl.lit(f"  Phenotype: {phenotype}:<br>"))
+        for sample in samples:
+            ad_col = f"{sample}_AD"
+            expr += (
+                pl.lit(f"    {sample}: ")
+                + pl.when(
+                    pl.col(ad_col).is_not_null()
+                ).then(
+                    pl.col(ad_col).list.join(" / ")
+                ).otherwise(
+                    pl.lit("")
+                )
+                + pl.lit("<br>")
             )
-            + pl.lit("<br>")
-        )
     yield expr.alias("allele_counts")
 
 
@@ -124,10 +133,6 @@ def get_length(lf: pl.LazyFrame) -> int:
     return lf.select(pl.len()).collect().item(0, 0)
 
 
-def get_chromosomes(lf: pl.LazyFrame) -> list[str]:
-    return lf.select("CHROM").unique().collect().to_series().to_list()
-
-
 #####################################################
 #####################################################
 # MAIN
@@ -150,11 +155,18 @@ def main():
     logger.info("Parsing p-values")
     pvalues_lf = parse_pvalues(args.pvalue_file)
 
-    AD_index = get_position_in_format(vcf_lf, "AD")
-    sample_cols = vcf_lf.collect_schema().names()[9:]
+    samples = vcf_lf.collect_schema().names()[9:]
+    design_df = pl.read_csv(args.design_file)
+    design_df = design_df.filter(pl.col("sample").is_in(samples))
+    phenotype_to_samples = {
+        d["phenotype"]: d['sample']
+        for d in design_df.group_by("phenotype").agg("sample").to_dicts()
+    }
 
+    AD_index = get_position_in_format(vcf_lf, "AD")
+    
     logger.info("Extracting allele depths")
-    for sample in sample_cols:
+    for sample in samples:
         vcf_lf = vcf_lf.with_columns(
             pl.col(sample)
             .str.split(":").list[AD_index]
@@ -186,7 +198,7 @@ def main():
     logger.info("Saving variants")
     variant_lf = (
         lf
-        .with_columns(format_count_per_sample(sample_cols))
+        .with_columns(format_count_per_sample(phenotype_to_samples))
         .rename({"CHROM": "chromosome", "POS": "position", "QUAL": "quality"})
         .select(
             [

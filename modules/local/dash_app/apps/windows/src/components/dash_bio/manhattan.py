@@ -201,8 +201,8 @@ class _ManhattanPlot:
             + df[self.quality_colname].astype(str)
             + "<br>MEAN TOTAL DEPTH: "
             + df[self.total_depth_colname].astype(str)
-            + "<br><br>ALLELE COUNTS (REF / ALT):<br>"
-            + df[self.allele_counts_colname].astype(str)
+            #+ "<br><br>ALLELE COUNTS (REF / ALT):<br>"
+            #+ df[self.allele_counts_colname].astype(str)
         )
 
     def get_yvalues(self, data: pd.DataFrame):

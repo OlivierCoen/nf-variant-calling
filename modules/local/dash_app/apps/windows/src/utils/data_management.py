@@ -100,7 +100,7 @@ class DataManager:
                     "pvalue",
                     "quality",
                     "total_depth",
-                    "allele_counts",
+                    #"allele_counts",
                 ]
             ),
             (pl.col("chromosome") + "_" + pl.col("position").cast(pl.String)).alias(
