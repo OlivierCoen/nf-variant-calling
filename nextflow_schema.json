@@ -175,6 +175,13 @@
             "fa_icon": "fas fa-terminal",
             "description": "Options for variant statistical analysis.",
             "properties": {
+                "skip_variant_analysis": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip variant analysis.",
+                    "fa_icon": "far fa-stop-circle",
+                    "help_text": "Use this option to skip variant analysis."
+                },
                 "statistical_test": {
                     "type": "string",
                     "enum": ["cmh", "fet", "chisq"],

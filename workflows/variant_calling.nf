@@ -108,15 +108,22 @@ workflow VARIANT_CALLING {
     // STATISTICAL TESTS
     // -----------------------------------------------------------------
 
-    VARIANT_ANALYSIS (
-        ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> [ meta, vcf ] },
-        ch_design_file,
-        params.statistical_test,
-        params.window_size
-    )
+    if ( !params.skip_variant_analysis ) {
+        
+        VARIANT_ANALYSIS (
+            ch_filtered_vcf_tbi.map{ meta, vcf, tbi -> [ meta, vcf ] },
+            ch_design_file,
+            params.statistical_test,
+            params.window_size
+        )
 
-    ch_variants                   = VARIANT_ANALYSIS.out.variants
-    ch_grouped_variants           = VARIANT_ANALYSIS.out.grouped_variants
+        ch_variants                   = VARIANT_ANALYSIS.out.variants
+        ch_grouped_variants           = VARIANT_ANALYSIS.out.grouped_variants
+
+    } else {
+        ch_variants                   = channel.empty()
+        ch_grouped_variants           = channel.empty()
+    }
 
     // -----------------------------------------------------------------
     // REPORTING (DASH APP, MULTIQC, ...)
