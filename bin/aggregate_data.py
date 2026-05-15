@@ -5,7 +5,6 @@ import logging
 from pathlib import Path
 
 import polars as pl
-from tqdm import tqdm
 
 from common import parse_vcf_data, get_position_in_format
 
@@ -164,7 +163,7 @@ def main():
     }
 
     AD_index = get_position_in_format(vcf_lf, "AD")
-    
+
     logger.info("Extracting allele depths")
     for sample in samples:
         vcf_lf = vcf_lf.with_columns(
