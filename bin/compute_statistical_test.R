@@ -55,7 +55,6 @@ cast_to_numeric <- function(df){
 compute_fet_from_contingency <- function(mat) {
   # Compute the fischer exact test from a contingency table
   # if they are more than 2 columns (phenotypes), use Monte Carlo simulation
-  if ( ncol(mat) > 2 ) {
   if ( ncol(mat) == 2 ) {
     res <- fisher.test(
       mat, 
@@ -69,8 +68,6 @@ compute_fet_from_contingency <- function(mat) {
       simulate.p.value = TRUE, 
       B = NB_MONTE_CARLO_SIMULATIONS
     )
-  } else {
-      res <- fisher.test(mat, alternative = "two.sided")
   }
   return(res$p.value)
 }
