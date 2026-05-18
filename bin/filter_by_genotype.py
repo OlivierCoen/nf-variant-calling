@@ -38,7 +38,17 @@ def parse_args():
         type=Path,
         required=True,
     )
-    parser.add_argument("--strict", action="store_true")
+    parser.add_argument(
+        "--out",
+        type=Path,
+        dest="outfile",
+        required=True,
+        help="Path to output file",
+    )
+    parser.add_argument(
+        "--strict", 
+        action="store_true"
+    )
     return parser.parse_args()
 
 
@@ -87,9 +97,8 @@ def main():
             pl.col(sample).str.split(":").list[GT_index].is_in(expected_genotypes)
         )
 
-    outfile = args.vcf_file.name.rstrip(".gz").replace(".vcf", OUTFILE_SUFFIX)
-    logger.info(f"Writing filtered data to {outfile}")
-    with open(outfile, 'w') as fout:
+    logger.info(f"Writing filtered data to {args.outfile}")
+    with open(args.outfile, 'w') as fout:
         fout.writelines(header)
         vcf_lf.rename({"CHROM": "#CHROM"}).sink_csv(fout, separator="\t")
 

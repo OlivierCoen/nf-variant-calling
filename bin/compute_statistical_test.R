@@ -56,9 +56,16 @@ compute_fet_from_contingency <- function(mat) {
   # Compute the fischer exact test from a contingency table
   # if they are more than 2 columns (phenotypes), use Monte Carlo simulation
   if ( ncol(mat) > 2 ) {
+  if ( ncol(mat) == 2 ) {
+    res <- fisher.test(
+      mat, 
+      alternative = "two.sided"
+    )
+  } else {
     res <- fisher.test(
       mat, 
       alternative = "two.sided",
+      hybrid = TRUE,
       simulate.p.value = TRUE, 
       B = NB_MONTE_CARLO_SIMULATIONS
     )
@@ -71,6 +78,15 @@ compute_fet_from_contingency <- function(mat) {
 compute_chisq_from_contingency <- function(mat) {
   # Compute the chi-square test from a contingency table
   res <- chisq.test(mat)
+  return(res$p.value)
+}
+
+compute_cmh_from_contingency <- function(mat) {
+  # Compute the Cochran-Mantel-Haenszel test from a contingency table
+  res <- mantelhaen.test(
+    mat,
+    alternative = "two.sided"
+  )
   return(res$p.value)
 }
 
@@ -112,6 +128,8 @@ compute_test <- function(method, R0, A0, sample_lists) {
               compute_fet_from_contingency(mat)
           } else if (method == "chisq") {
             compute_chisq_from_contingency(mat)
+          } else if (method == "cmh") {
+            compute_cmh_from_contingency(mat)
           }
         }, error = function(e) {
           #warning("Error with matrix:")
@@ -223,6 +241,19 @@ main <- function() {
             }
             samples_pheno_1 <- sample_lists[[1]]
             samples_pheno_2 <- sample_lists[[2]]
+            if (length(samples_pheno_1) == length(samples_pheno_2)) {
+                message("Number of samples in phenotype 1 matches number of samples in phenotype 2!")
+                p_values <- compute_cochran_mantel_haenszel_test(
+                  R0 = RO[,samples_pheno_1],
+                  R1 = RO[,samples_pheno_2],
+                  A0 = AO[,samples_pheno_1],
+                  A1 = AO[,samples_pheno_2],
+                  correct = TRUE
+                )
+            } else {
+                message("Number of samples in phenotype 1 does not match number of samples in phenotype 2! Cannot use the vectorised implementation of CMH. Falling back to built-in CMH test.")
+                p_values <- compute_test(args$method, RO, AO, sample_lists)
+            }
             
             p_values <- compute_cochran_mantel_haenszel_test(
               R0 = RO[,samples_pheno_1],
@@ -231,6 +262,7 @@ main <- function() {
               A1 = AO[,samples_pheno_2],
               correct = TRUE
             )
+           
             
         } else if ( args$method %in% c("fet", "chisq") ) {
           
