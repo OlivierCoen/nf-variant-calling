@@ -24,8 +24,8 @@ if [ -f $pvalues ]; then
 fi
 micromamba run -n stat_test bin/compute_statistical_test.R \
     --method fet \
-    --RO-counts $RO_counts \
-    --AO-counts $AO_counts \
+    --RO $RO_counts \
+    --AO $AO_counts \
     --design $DESIGN \
     --out $pvalues
 
