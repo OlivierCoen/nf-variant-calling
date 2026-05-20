@@ -41,8 +41,7 @@ bin/aggregate_data.py \
     --window-size 20000
 
 cp -r modules/local/dash_app/apps ${OUTDIR}/dash_app
-mkdir -p ${OUTDIR}/dash_app/apps/variants/data ${OUTDIR}/dash_app/apps/windows/data
+mkdir -p ${OUTDIR}/dash_app/variants/data ${OUTDIR}/dash_app/windows/data
 
-mv ${OUTDIR}/${prefix}.grouped_variants.parquet ${OUTDIR}/dash_app/apps/windows/data
-mv ${OUTDIR}/${prefix}.formated_variants.parquet ${OUTDIR}/dash_app/apps/variants/data
-
+mv ${OUTDIR}/${prefix}.grouped_variants.parquet ${OUTDIR}/dash_app/windows/data
+mv ${OUTDIR}/${prefix}.formated_variants.parquet ${OUTDIR}/dash_app/variants/data
