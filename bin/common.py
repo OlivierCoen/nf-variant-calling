@@ -24,9 +24,15 @@ def parse_vcf_data(vcf_file: Path) -> pl.LazyFrame:
 
 def get_position_in_format(vcf_lf: pl.LazyFrame, info: str) -> int:
     fmt_series = vcf_lf.select("FORMAT").collect().to_series()
-    if fmt_series.unique().len() > 1:
-        raise ValueError(f"More than one format found: {fmt_series.unique()}")
-    fmt = fmt_series.unique().item()
+    #if fmt_series.unique().len() > 1:
+    #    raise ValueError(f"More than one format found: {fmt_series.unique()}")
+    fmt_series.unique()
+    if len(fmt_series.unique()) > 1:
+        # take the fmt that has the most fields (i.e. the longest)
+        fmts = sorted(fmt_series.unique().to_list(), key=lambda x: len(x.split(":")))[::-1]
+        fmt = fmts[0]
+    else:
+        fmt = fmt_series.unique().item()
     return fmt.split(":").index(info)
 
 
