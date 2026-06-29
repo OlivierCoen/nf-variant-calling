@@ -13,7 +13,11 @@
 
 ## Introduction
 
-**nf-variant-calling** is a bioinformatics pipeline that performs variant calling on using short reads and a genome fasta file.
+**nf-variant-calling** is a bioinformatics pipeline that performs variant calling using short reads and a genome fasta file.
+
+<p align="center">
+    <img title="nf-variant-calling Workflow" src="docs/images/nf_variant_calling.metromap.png" width=100%>
+</p>
 
 ## Usage
 
